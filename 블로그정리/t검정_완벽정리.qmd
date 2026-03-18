@@ -41,7 +41,7 @@ import scipy.stats as stats
 
 # 1. GitHub Raw URL에서 데이터 불러오기
 # (본인의 GitHub에 파일을 올린 후 Raw 주소로 교체하세요!)
-url = "https://raw.githubusercontent.com/사용자아이디/레포지토리/main/data/coffee_one_sample.csv"
+url = "https://raw.githubusercontent.com/MOON001208/ADP-data-set-and-analysis/main/data/coffee_one_sample.csv"
 df = pd.read_csv(url)
 
 # 2. 정규성 검정 (Shapiro-Wilk)
@@ -56,7 +56,7 @@ print(f"[단일표본 t-검정] p-value: {t_pval:.4f}")
 ### 📊 R 코드
 ```{r}
 # 1. GitHub Raw URL에서 데이터 불러오기
-url <- "https://raw.githubusercontent.com/사용자아이디/레포지토리/main/data/coffee_one_sample.csv"
+url <- "https://raw.githubusercontent.com/MOON001208/ADP-data-set-and-analysis/main/data/coffee_one_sample.csv"
 df <- read.csv(url)
 
 # 2. 정규성 검정
@@ -86,7 +86,7 @@ import pandas as pd
 import scipy.stats as stats
 
 # 1. 데이터 불러오기
-url = "https://raw.githubusercontent.com/사용자아이디/레포지토리/main/data/school_scores_independent.csv"
+url = "https://raw.githubusercontent.com/MOON001208/ADP-data-set-and-analysis/main/data/school_scores_independent.csv"
 df = pd.read_csv(url)
 
 # 그룹별 데이터 분리
@@ -109,7 +109,7 @@ print(f"[독립표본 t-검정] p-value: {t_pval:.4f}")
 ### 📊 R 코드
 ```{r}
 # 1. 데이터 불러오기
-url <- "https://raw.githubusercontent.com/사용자아이디/레포지토리/main/data/school_scores_independent.csv"
+url <- "https://raw.githubusercontent.com/MOON001208/ADP-data-set-and-analysis/main/data/school_scores_independent.csv"
 df <- read.csv(url)
 
 # 2. 정규성 검정
@@ -143,7 +143,7 @@ import pandas as pd
 import scipy.stats as stats
 
 # 1. 데이터 불러오기
-url = "https://raw.githubusercontent.com/사용자아이디/레포지토리/main/data/blood_pressure_paired.csv"
+url = "https://raw.githubusercontent.com/MOON001208/ADP-data-set-and-analysis/main/data/blood_pressure_paired.csv"
 df = pd.read_csv(url)
 
 # 차이값 정규성 검정 (after - before)
@@ -159,7 +159,7 @@ print(f"[대응표본 t-검정] p-value: {t_pval:.4f}")
 ### 📊 R 코드
 ```{r}
 # 1. 데이터 불러오기
-url <- "https://raw.githubusercontent.com/사용자아이디/레포지토리/main/data/blood_pressure_paired.csv"
+url <- "https://raw.githubusercontent.com/MOON001208/ADP-data-set-and-analysis/main/data/blood_pressure_paired.csv"
 df <- read.csv(url)
 
 # 2. 정규성 검정 (차이값)

@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.8.27">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>T-검정(t-test) 완벽 정리 - 개념, R/Python 코드 및 해석</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="t검정_완벽정리_files/libs/clipboard/clipboard.min.js"></script>
+<script src="t검정_완벽정리_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="t검정_완벽정리_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="t검정_완벽정리_files/libs/quarto-html/axe/axe-check.js" type="module"></script>
+<script src="t검정_완벽정리_files/libs/quarto-html/popper.min.js"></script>
+<script src="t검정_완벽정리_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="t검정_완벽정리_files/libs/quarto-html/anchor.min.js"></script>
+<link href="t검정_완벽정리_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="t검정_완벽정리_files/libs/quarto-html/quarto-syntax-highlighting-ed96de9b727972fe78a7b5d16c58bf87.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="t검정_완벽정리_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="t검정_완벽정리_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="t검정_완벽정리_files/libs/bootstrap/bootstrap-9e3ffae467580fdb927a41352e75a2e0.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="fullcontent quarto-light">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">T-검정(t-test) 완벽 정리 - 개념, R/Python 코드 및 해석</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="지문만-보고-1초-만에-파악하는-t-검정t-test-완벽-가이드" class="level1">
+<h1>지문만 보고 1초 만에 파악하는 T-검정(t-test) 완벽 가이드</h1>
+<p><strong>T-검정(t-test)</strong>은 모집단의 분산을 알지 못할 때, 표본 평균을 통해 집단의 평균을 비교하고 가설을 검정하는 방법입니다. ADP 실기 시험에서는 지문에 등장하는 <strong>‘비교 대상의 수’</strong>와 <strong>‘독립성 여부’</strong>에 따라 3가지 검정 중 하나를 정확히 선택해야 합니다.</p>
+<section id="핵심-adp-지문-키워드로-보는-t-검정-선택-가이드" class="level2">
+<h2 class="anchored" data-anchor-id="핵심-adp-지문-키워드로-보는-t-검정-선택-가이드">🎯 [핵심] ADP 지문 키워드로 보는 t-검정 선택 가이드</h2>
+<p>문제를 읽고 아래의 키워드에 따라 알맞은 검정을 선택하세요.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">검정 종류</th>
+<th style="text-align: left;">비교 대상</th>
+<th style="text-align: left;">ADP 지문 단골 키워드 (이렇게 문제에 나옵니다!)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><strong>단일 표본 t-검정</strong> <br>(One-sample)</td>
+<td style="text-align: left;"><strong>1개 집단</strong> vs <br>알려진 <strong>특정 값</strong></td>
+<td style="text-align: left;">“A회사의 건전지 수명은 <strong>100시간</strong>으로 <strong>알려져 있다</strong>. <br>추출한 표본을 바탕으로 이 <strong>주장이 사실인지</strong> 검정하시오.”</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>독립 표본 t-검정</strong> <br>(Independent)</td>
+<td style="text-align: left;">서로 다른 <br><strong>2개의 집단</strong></td>
+<td style="text-align: left;">“<strong>A반</strong>과 <strong>B반</strong>의 평균 점수에 차이가 있는지 검정하시오.” <br>“<strong>기본 공정</strong>과 <strong>신규 공정</strong> 간 불량률에 유의미한 차이가 있는가?”</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><strong>대응 표본 t-검정</strong> <br>(Paired)</td>
+<td style="text-align: left;"><strong>동일한 개체</strong>의 <br><strong>전/후</strong> 상태</td>
+<td style="text-align: left;">“A 다이어트 약 <strong>복용 전</strong>과 <strong>복용 후</strong>의 체중 변화를 검정하시오.”<br>“동일한 환자들에게 <strong>신약</strong>과 <strong>위약</strong>을 교차 투여한 후 효과 차이…”</td>
+</tr>
+</tbody>
+</table>
+<blockquote class="blockquote">
+<p>💡 <strong>방향성(대립가설) 설정 팁:</strong> * “차이가 있는가?”, “같은가/다른가?” -&gt; <strong>양측 검정(Two-sided)</strong> (기본값) * “~가 <strong>더 큰가(높은가)?</strong>”, “~가 <strong>더 작은가(낮은가)?</strong>” -&gt; <strong>단측 검정(Greater / Less)</strong> 설정 필수!</p>
+</blockquote>
+<p>모든 t-검정은 <strong>‘정규성 가정’</strong>을 전제로 합니다. 정규성을 만족하지 못하면 비모수 검정을 사용해야 하므로, 답안 작성 시 반드시 모수/비모수 선택의 근거를 코드로 보여주어야 합니다.</p>
+<hr>
+</section>
+<section id="단일-표본-t-검정-one-sample-t-test" class="level2">
+<h2 class="anchored" data-anchor-id="단일-표본-t-검정-one-sample-t-test">1. 단일 표본 t-검정 (One-sample t-test)</h2>
+<p>특정 집단의 표본 평균이, 사전에 알려진 통상적인 평균값(기준값)과 일치하는지 확인합니다. 독립변수 0개, 종속변수 1개일 때 사용합니다.</p>
+<ul>
+<li><strong>상황:</strong> A 커피숍에서 판매하는 아메리카노의 평균 용량이 300ml라고 홍보하고 있다. 실제로 30잔을 무작위로 추출하여 측정한 결과, 이 집단의 평균 용량이 300ml와 차이가 있는지 검정하시오.</li>
+<li><strong>가설:</strong>
+<ul>
+<li><span class="math inline">\(H_0\)</span> (귀무가설): 아메리카노의 평균 용량은 300ml 이다.</li>
+<li><span class="math inline">\(H_1\)</span> (대립가설): 아메리카노의 평균 용량은 300ml가 아니다.</li>
+</ul></li>
+</ul>
+<section id="python-코드" class="level3">
+<h3 class="anchored" data-anchor-id="python-코드">🐍 Python 코드</h3>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> scipy.stats <span class="im">as</span> stats</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. 데이터 세팅 (평균 295, 샘플 30개 추출)</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>np.random.seed(<span class="dv">42</span>)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>coffee_vol <span class="op">=</span> np.random.normal(loc<span class="op">=</span><span class="dv">295</span>, scale<span class="op">=</span><span class="dv">10</span>, size<span class="op">=</span><span class="dv">30</span>) </span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. 정규성 검정 (Shapiro-Wilk)</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>stat, p_val <span class="op">=</span> stats.shapiro(coffee_vol)</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"[정규성 검정] p-value: </span><span class="sc">{</span>p_val<span class="sc">:.4f}</span><span class="ss">"</span>) </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[정규성 검정] p-value: 0.6868</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 결과: p &gt; 0.05 이면 정규분포를 따름 -&gt; t-test 진행</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="co"># (불만족 시 비모수 검정: stats.wilcoxon(coffee_vol - 300) 수행)</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. 단일 표본 t-검정</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>t_stat, t_pval <span class="op">=</span> stats.ttest_1samp(coffee_vol, popmean<span class="op">=</span><span class="dv">300</span>)</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"[단일표본 t-검정] p-value: </span><span class="sc">{</span>t_pval<span class="sc">:.4f}</span><span class="ss">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[단일표본 t-검정] p-value: 0.0002</code></pre>
+</div>
+</div>
+</section>
+<section id="r-코드" class="level3">
+<h3 class="anchored" data-anchor-id="r-코드">📊 R 코드</h3>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">42</span>)</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>coffee_vol <span class="ot">&lt;-</span> <span class="fu">rnorm</span>(<span class="dv">30</span>, <span class="at">mean=</span><span class="dv">295</span>, <span class="at">sd=</span><span class="dv">10</span>)</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. 정규성 검정</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="fu">shapiro.test</span>(coffee_vol)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+    Shapiro-Wilk normality test
+
+data:  coffee_vol
+W = 0.96209, p-value = 0.35</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. 단일 표본 t-검정</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="co"># (정규성 위배 시 비모수 검정: wilcox.test(coffee_vol, mu=300))</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="fu">t.test</span>(coffee_vol, <span class="at">mu=</span><span class="dv">300</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+    One Sample t-test
+
+data:  coffee_vol
+t = -1.8828, df = 29, p-value = 0.0698
+alternative hypothesis: true mean is not equal to 300
+95 percent confidence interval:
+ 290.9995 300.3722
+sample estimates:
+mean of x 
+ 295.6859 </code></pre>
+</div>
+</div>
+</section>
+<section id="결론-해석-모범-답안-작성법" class="level3">
+<h3 class="anchored" data-anchor-id="결론-해석-모범-답안-작성법">📝 [결론 해석 모범 답안 작성법]</h3>
+<blockquote class="blockquote">
+<p>Shapiro-Wilk 검정 결과 p-value가 유의수준 0.05보다 커 정규성 가정을 만족한다. 이에 단일 표본 t-검정을 수행한 결과, p-value가 0.003으로 도출되었다. 유의수준 0.05 하에서 귀무가설을 기각하므로, A 커피숍의 아메리카노 평균 용량은 300ml라고 볼 수 없으며 홍보 내용과 유의미한 차이가 존재한다.</p>
+</blockquote>
+<hr>
+</section>
+</section>
+<section id="독립-표본-t-검정-independent-two-sample-t-test" class="level2">
+<h2 class="anchored" data-anchor-id="독립-표본-t-검정-independent-two-sample-t-test">2. 독립 표본 t-검정 (Independent Two-sample t-test)</h2>
+<p>서로 다른 독립적인 2개 집단의 평균이 같은지를 검정합니다. 이 검정은 유일하게 정규성 검정 후 <strong>‘등분산성 검정’</strong>을 추가로 거쳐야 합니다.</p>
+<ul>
+<li><strong>상황:</strong> 남학생 30명과 여학생 30명을 대상으로 체육 실기 시험을 보았다. 성별에 따른 실기 점수 평균에 차이가 있는지 검정하시오.</li>
+<li><strong>가설:</strong>
+<ul>
+<li><span class="math inline">\(H_0\)</span> (귀무가설): 남학생과 여학생의 평균 점수에는 차이가 없다.</li>
+<li><span class="math inline">\(H_1\)</span> (대립가설): 남학생과 여학생의 평균 점수에는 차이가 있다.</li>
+</ul></li>
+</ul>
+<section id="python-코드-1" class="level3">
+<h3 class="anchored" data-anchor-id="python-코드-1">🐍 Python 코드</h3>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> scipy.stats <span class="im">as</span> stats</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>np.random.seed(<span class="dv">123</span>)</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>score_m <span class="op">=</span> np.random.normal(loc<span class="op">=</span><span class="dv">85</span>, scale<span class="op">=</span><span class="dv">5</span>, size<span class="op">=</span><span class="dv">30</span>)</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>score_f <span class="op">=</span> np.random.normal(loc<span class="op">=</span><span class="dv">78</span>, scale<span class="op">=</span><span class="dv">5</span>, size<span class="op">=</span><span class="dv">30</span>)</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. 정규성 검정</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"남학생 정규성 p: "</span>, stats.shapiro(score_m).pvalue)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>남학생 정규성 p:  0.3508744273313644</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"여학생 정규성 p: "</span>, stats.shapiro(score_f).pvalue)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>여학생 정규성 p:  0.971662476742308</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 둘 중 하나라도 불만족하면 비모수(stats.mannwhitneyu(score_m, score_f))로 이동!</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. 등분산성 검정 (Levene/Bartlett) - H0: 두 집단의 분산이 같다.</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>stat, levene_p <span class="op">=</span> stats.levene(score_m, score_f)</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"[등분산성 검정] p-value: </span><span class="sc">{</span>levene_p<span class="sc">:.4f}</span><span class="ss">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[등분산성 검정] p-value: 0.9592</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. 독립 표본 t-검정 </span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="co"># p&gt;0.05(등분산 만족) -&gt; equal_var=True (Student's t-test)</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="co"># p&lt;0.05(등분산 불만족) -&gt; equal_var=False (Welch's t-test)</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>t_stat, t_pval <span class="op">=</span> stats.ttest_ind(score_m, score_f, equal_var<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"[독립표본 t-검정] p-value: </span><span class="sc">{</span>t_pval<span class="sc">:.4f}</span><span class="ss">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[독립표본 t-검정] p-value: 0.0001</code></pre>
+</div>
+</div>
+</section>
+<section id="r-코드-1" class="level3">
+<h3 class="anchored" data-anchor-id="r-코드-1">📊 R 코드</h3>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>score_m <span class="ot">&lt;-</span> <span class="fu">rnorm</span>(<span class="dv">30</span>, <span class="at">mean=</span><span class="dv">85</span>, <span class="at">sd=</span><span class="dv">5</span>)</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>score_f <span class="ot">&lt;-</span> <span class="fu">rnorm</span>(<span class="dv">30</span>, <span class="at">mean=</span><span class="dv">78</span>, <span class="at">sd=</span><span class="dv">5</span>)</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. 정규성 검정 (위배시 wilcox.test(score_m, score_f))</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a><span class="fu">shapiro.test</span>(score_m)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+    Shapiro-Wilk normality test
+
+data:  score_m
+W = 0.97894, p-value = 0.7966</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="fu">shapiro.test</span>(score_f)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+    Shapiro-Wilk normality test
+
+data:  score_f
+W = 0.98662, p-value = 0.9614</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. 등분산성 검정</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="fu">var.test</span>(score_m, score_f)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+    F test to compare two variances
+
+data:  score_m and score_f
+F = 1.3799, num df = 29, denom df = 29, p-value = 0.391
+alternative hypothesis: true ratio of variances is not equal to 1
+95 percent confidence interval:
+ 0.6568013 2.8992415
+sample estimates:
+ratio of variances 
+          1.379937 </code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. 독립 표본 t-검정 (등분산에 따라 var.equal 논리값 변경)</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="fu">t.test</span>(score_m, score_f, <span class="at">var.equal=</span><span class="cn">TRUE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+    Two Sample t-test
+
+data:  score_m and score_f
+t = 4.9934, df = 58, p-value = 5.754e-06
+alternative hypothesis: true difference in means is not equal to 0
+95 percent confidence interval:
+ 3.518565 8.227014
+sample estimates:
+mean of x mean of y 
+ 84.76448  78.89169 </code></pre>
+</div>
+</div>
+</section>
+<section id="결론-해석-모범-답안-작성법-1" class="level3">
+<h3 class="anchored" data-anchor-id="결론-해석-모범-답안-작성법-1">📝 [결론 해석 모범 답안 작성법]</h3>
+<blockquote class="blockquote">
+<p>남학생과 여학생 집단 각각에 대해 정규성 검정을 실시하여 가정을 만족함을 확인하였다. 이어서 Levene의 등분산성 검정 결과 p-value가 유의수준 0.05보다 커 두 집단의 분산이 동일하다는 가정을 만족하였다. 등분산을 가정한 독립표본 t-검정 결과 p-value가 0.05 미만으로 도출되어 귀무가설을 기각한다. 결론적으로 성별에 따른 체육 실기 점수 평균은 통계적으로 유의미한 차이가 있다.</p>
+</blockquote>
+<hr>
+</section>
+</section>
+<section id="대응-표본-t-검정-paired-t-test" class="level2">
+<h2 class="anchored" data-anchor-id="대응-표본-t-검정-paired-t-test">3. 대응 표본 t-검정 (Paired t-test)</h2>
+<p>동일한 객체(사람, 기계 등)에 대해 두 가지 처리를 한 후, ‘처치 전’과 ’처치 후’ 측정값 간에 차이가 생겼는지 검정합니다. 독립 표본이 아니라는 점이 핵심입니다.</p>
+<ul>
+<li><strong>상황:</strong> 고혈압 환자 20명에게 새로운 혈압 강하제를 투여하기 전과 투여한 후의 혈압을 각각 측정하였다. 이 약이 혈압 하강에 유의미한 효과가 있는지 검정하시오.</li>
+<li><strong>가설 (단측 검정):</strong>
+<ul>
+<li><span class="math inline">\(H_0\)</span> (귀무가설): 투여 후 혈압 - 투여 전 혈압 <span class="math inline">\(\ge 0\)</span> (효과가 없다)</li>
+<li><span class="math inline">\(H_1\)</span> (대립가설): 투여 후 혈압 - 투여 전 혈압 <span class="math inline">\(&lt; 0\)</span> (투여 후 혈압이 더 낮아졌다 / 효과가 있다)</li>
+</ul></li>
+</ul>
+<section id="python-코드-2" class="level3">
+<h3 class="anchored" data-anchor-id="python-코드-2">🐍 Python 코드</h3>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> scipy.stats <span class="im">as</span> stats</span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>np.random.seed(<span class="dv">999</span>)</span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>bp_before <span class="op">=</span> np.random.normal(loc<span class="op">=</span><span class="dv">150</span>, scale<span class="op">=</span><span class="dv">15</span>, size<span class="op">=</span><span class="dv">20</span>)</span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a>bp_after <span class="op">=</span> bp_before <span class="op">-</span> np.random.normal(loc<span class="op">=</span><span class="dv">10</span>, scale<span class="op">=</span><span class="dv">5</span>, size<span class="op">=</span><span class="dv">20</span>) </span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a><span class="co"># 🚨 핵심: 변화량(차이값)에 대한 정규성 검정을 수행해야 함!</span></span>
+<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a>diff <span class="op">=</span> bp_after <span class="op">-</span> bp_before</span>
+<span id="cb25-10"><a href="#cb25-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-11"><a href="#cb25-11" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. 차이값 정규성 검정</span></span>
+<span id="cb25-12"><a href="#cb25-12" aria-hidden="true" tabindex="-1"></a>stat, p_val <span class="op">=</span> stats.shapiro(diff)</span>
+<span id="cb25-13"><a href="#cb25-13" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"[차이값 정규성 검정] p-value: </span><span class="sc">{</span>p_val<span class="sc">:.4f}</span><span class="ss">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[차이값 정규성 검정] p-value: 0.8783</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb27"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="co"># (위배 시 비모수: stats.wilcoxon(bp_after, bp_before, alternative='less'))</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. 대응 표본 t-검정 (단측 검정: after가 before보다 '작은가?')</span></span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Python scipy 1.6.0 이상부터 alternative 옵션 지원 ('two-sided', 'less', 'greater')</span></span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>t_stat, t_pval <span class="op">=</span> stats.ttest_rel(bp_after, bp_before, alternative<span class="op">=</span><span class="st">'less'</span>)</span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"[대응표본 t-검정] p-value: </span><span class="sc">{</span>t_pval<span class="sc">:.4f}</span><span class="ss">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[대응표본 t-검정] p-value: 0.0000</code></pre>
+</div>
+</div>
+</section>
+<section id="r-코드-2" class="level3">
+<h3 class="anchored" data-anchor-id="r-코드-2">📊 R 코드</h3>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">999</span>)</span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>bp_before <span class="ot">&lt;-</span> <span class="fu">rnorm</span>(<span class="dv">20</span>, <span class="at">mean=</span><span class="dv">150</span>, <span class="at">sd=</span><span class="dv">15</span>)</span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>bp_after <span class="ot">&lt;-</span> bp_before <span class="sc">-</span> <span class="fu">rnorm</span>(<span class="dv">20</span>, <span class="at">mean=</span><span class="dv">10</span>, <span class="at">sd=</span><span class="dv">5</span>)</span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>diff <span class="ot">&lt;-</span> bp_after <span class="sc">-</span> bp_before</span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. 차이값 정규성 검정</span></span>
+<span id="cb29-8"><a href="#cb29-8" aria-hidden="true" tabindex="-1"></a><span class="fu">shapiro.test</span>(diff)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+    Shapiro-Wilk normality test
+
+data:  diff
+W = 0.96672, p-value = 0.6848</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="co"># (비모수 시: wilcox.test(bp_after, bp_before, paired=TRUE, alternative="less"))</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. 대응 표본 t-검정 </span></span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a><span class="co"># 핵심: paired=TRUE 필수, after가 before보다 '작은지' 묻는 것이므로 "less"</span></span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a><span class="fu">t.test</span>(bp_after, bp_before, <span class="at">paired=</span><span class="cn">TRUE</span>, <span class="at">alternative=</span><span class="st">"less"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+    Paired t-test
+
+data:  bp_after and bp_before
+t = -7.5522, df = 19, p-value = 1.95e-07
+alternative hypothesis: true mean difference is less than 0
+95 percent confidence interval:
+      -Inf -7.005754
+sample estimates:
+mean difference 
+      -9.086079 </code></pre>
+</div>
+</div>
+</section>
+<section id="결론-해석-모범-답안-작성법-2" class="level3">
+<h3 class="anchored" data-anchor-id="결론-해석-모범-답안-작성법-2">📝 [결론 해석 모범 답안 작성법]</h3>
+<blockquote class="blockquote">
+<p>환자들의 투여 전후 혈압 차이값(투여 후 - 투여 전)에 대해 정규성 검정을 수행한 결과 정규성을 만족하였다. 약 투여 후 혈압이 더 낮아졌는지를 확인하기 위해 단측(좌측) 대응 표본 t-검정을 수행한 결과, p-value가 유의수준 0.05 미만으로 도출되어 귀무가설을 기각한다. 따라서 새로운 혈압 강하제는 환자들의 혈압을 유의미하게 하강시키는 효과가 있다고 결론 내릴 수 있다.</p>
+</blockquote>
+<hr>
+</section>
+</section>
+<section id="adp-출제-위원회를-울리는-감점-방지-체크리스트" class="level2">
+<h2 class="anchored" data-anchor-id="adp-출제-위원회를-울리는-감점-방지-체크리스트">⛔ ADP 출제 위원회를 울리는 감점 방지 체크리스트</h2>
+<ol type="1">
+<li><strong>“비모수 검정 함수 이름이 뭐였더라?”</strong>
+<ul>
+<li>정규성을 만족하지 않을 때의 대체 함수입니다.</li>
+<li>단일/대응 표본 t-검정 -&gt; <strong>윌콕슨 부호순위 검정</strong> (<code>wilcoxon()</code>, <code>wilcox.test(paired=T)</code>)</li>
+<li>독립 표본 t-검정 -&gt; <strong>맨-휘트니 U검정</strong> (<code>mannwhitneyu()</code>, <code>wilcox.test()</code>)</li>
+</ul></li>
+<li><strong>“등분산성 검정은 언제 건너뛰나요?”</strong>
+<ul>
+<li>분산을 비교할 ’다른 집단’이 없는 <strong>단일 표본</strong>, 그리고 ’서로 같은 개체’인 <strong>대응 표본</strong> t-검정에서는 절대 Levene/Bartlett 검정을 하지 않습니다. (시간 낭비 + 감점 요인)</li>
+</ul></li>
+<li><strong>“방향 조심: Greater냐 Less냐”</strong>
+<ul>
+<li>두 변수의 순서(<code>A, B</code>)를 어떻게 넣느냐에 따라 <code>greater</code>와 <code>less</code>의 의미가 완전히 반대가 됩니다. <code>t.test(A, B)</code> 이면 “A - B”의 차이를 의미하므로, <strong>A가 더 큰지</strong> 알고 싶다면 <code>greater</code>가 맞습니다. 헷갈리면 항상 <strong>양측 검정(<code>two-sided</code>) 도출 후, t-통계량의 부호를 보고 해석</strong>하는 것도 꿀팁입니다.</li>
+</ul></li>
+</ol>
+</section>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

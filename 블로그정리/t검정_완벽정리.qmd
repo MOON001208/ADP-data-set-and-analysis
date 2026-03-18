@@ -1,0 +1,186 @@
+---
+title: "T-검정(t-test) 완벽 정리 - 개념, R/Python 코드 및 해석"
+format: html
+---
+
+# 지문만 보고 1초 만에 파악하는 T-검정(t-test) 완벽 가이드
+
+**T-검정(t-test)**은 모집단의 분산을 알지 못할 때, 표본 평균을 통해 집단의 평균을 비교하고 가설을 검정하는 방법입니다. ADP 실기 시험에서는 지문에 등장하는 **'비교 대상의 수'**와 **'독립성 여부'**에 따라 3가지 검정 중 하나를 정확히 선택해야 합니다.
+
+## 🎯 [핵심] ADP 지문 키워드로 보는 t-검정 선택 가이드
+
+문제를 읽고 아래의 키워드에 따라 알맞은 검정을 선택하세요.
+
+| 검정 종류 | 비교 대상 | ADP 지문 단골 키워드 (이렇게 문제에 나옵니다!) |
+| :--- | :--- | :--- |
+| **단일 표본 t-검정** <br>(One-sample) | **1개 집단** vs <br>알려진 **특정 값** | "A회사의 건전지 수명은 **100시간**으로 **알려져 있다**. <br>추출한 표본을 바탕으로 이 **주장이 사실인지** 검정하시오." |
+| **독립 표본 t-검정** <br>(Independent) | 서로 다른 <br>**2개의 집단** | "**A반**과 **B반**의 평균 점수에 차이가 있는지 검정하시오." <br>"**기본 공정**과 **신규 공정** 간 불량률에 유의미한 차이가 있는가?" |
+| **대응 표본 t-검정** <br>(Paired) | **동일한 개체**의 <br>**전/후** 상태 | "A 다이어트 약 **복용 전**과 **복용 후**의 체중 변화를 검정하시오."<br>"동일한 환자들에게 **신약**과 **위약**을 교차 투여한 후 효과 차이..." |
+
+> 💡 **방향성(대립가설) 설정 팁:** 
+> *   "차이가 있는가?", "같은가/다른가?" -> **양측 검정(Two-sided)** (기본값)
+> *   "~가 **더 큰가(높은가)?**", "~가 **더 작은가(낮은가)?**" -> **단측 검정(Greater / Less)** 설정 필수!
+
+모든 t-검정은 **'정규성 가정'**을 전제로 합니다. 정규성을 만족하지 못하면 비모수 검정을 사용해야 하므로, 답안 작성 시 반드시 모수/비모수 선택의 근거를 코드로 보여주어야 합니다.
+
+---
+
+## 1. 단일 표본 t-검정 (One-sample t-test)
+
+특정 집단의 표본 평균이, 사전에 알려진 통상적인 평균값(기준값)과 일치하는지 확인합니다. 독립변수 0개, 종속변수 1개일 때 사용합니다.
+
+*   **상황:** A 커피숍에서 판매하는 아메리카노의 평균 용량이 300ml라고 홍보하고 있다. 실제로 30잔을 무작위로 추출하여 측정한 결과, 이 집단의 평균 용량이 300ml와 차이가 있는지 검정하시오.
+*   **가설:**
+    *   $H_0$ (귀무가설): 아메리카노의 평균 용량은 300ml 이다.
+    *   $H_1$ (대립가설): 아메리카노의 평균 용량은 300ml가 아니다.
+
+### 🐍 Python 코드
+```{python}
+import pandas as pd
+import scipy.stats as stats
+
+# 1. GitHub Raw URL에서 데이터 불러오기
+# (본인의 GitHub에 파일을 올린 후 Raw 주소로 교체하세요!)
+url = "https://raw.githubusercontent.com/사용자아이디/레포지토리/main/data/coffee_one_sample.csv"
+df = pd.read_csv(url)
+
+# 2. 정규성 검정 (Shapiro-Wilk)
+stat, p_val = stats.shapiro(df['volume'])
+print(f"[정규성 검정] p-value: {p_val:.4f}") 
+
+# 3. 단일 표본 t-검정
+t_stat, t_pval = stats.ttest_1samp(df['volume'], popmean=300)
+print(f"[단일표본 t-검정] p-value: {t_pval:.4f}")
+```
+
+### 📊 R 코드
+```{r}
+# 1. GitHub Raw URL에서 데이터 불러오기
+url <- "https://raw.githubusercontent.com/사용자아이디/레포지토리/main/data/coffee_one_sample.csv"
+df <- read.csv(url)
+
+# 2. 정규성 검정
+shapiro.test(df$volume)
+
+# 3. 단일 표본 t-검정
+t.test(df$volume, mu = 300)
+```
+
+### 📝 [결론 해석 모범 답안 작성법]
+> Shapiro-Wilk 검정 결과 p-value가 유의수준 0.05보다 커 정규성 가정을 만족한다. 이에 단일 표본 t-검정을 수행한 결과, p-value가 0.003으로 도출되었다. 유의수준 0.05 하에서 귀무가설을 기각하므로, A 커피숍의 아메리카노 평균 용량은 300ml라고 볼 수 없으며 홍보 내용과 유의미한 차이가 존재한다.
+
+---
+
+## 2. 독립 표본 t-검정 (Independent Two-sample t-test)
+
+서로 다른 독립적인 2개 집단의 평균이 같은지를 검정합니다. 이 검정은 유일하게 정규성 검정 후 **'등분산성 검정'**을 추가로 거쳐야 합니다.
+
+*   **상황:** 남학생 30명과 여학생 30명을 대상으로 체육 실기 시험을 보았다. 성별에 따른 실기 점수 평균에 차이가 있는지 검정하시오.
+*   **가설:**
+    *   $H_0$ (귀무가설): 남학생과 여학생의 평균 점수에는 차이가 없다. 
+    *   $H_1$ (대립가설): 남학생과 여학생의 평균 점수에는 차이가 있다. 
+
+### 🐍 Python 코드
+```{python}
+import pandas as pd
+import scipy.stats as stats
+
+# 1. 데이터 불러오기
+url = "https://raw.githubusercontent.com/사용자아이디/레포지토리/main/data/school_scores_independent.csv"
+df = pd.read_csv(url)
+
+# 그룹별 데이터 분리
+score_m = df[df['group'] == 'M']['score']
+score_f = df[df['group'] == 'F']['score']
+
+# 2. 정규성 검정
+print("남학생 정규성 p: ", stats.shapiro(score_m).pvalue)
+print("여학생 정규성 p: ", stats.shapiro(score_f).pvalue)
+
+# 3. 등분산성 검정 (Levene/Bartlett) 
+stat, levene_p = stats.levene(score_m, score_f)
+print(f"[등분산성 검정] p-value: {levene_p:.4f}")
+
+# 4. 독립 표본 t-검정 
+t_stat, t_pval = stats.ttest_ind(score_m, score_f, equal_var=True)
+print(f"[독립표본 t-검정] p-value: {t_pval:.4f}")
+```
+
+### 📊 R 코드
+```{r}
+# 1. 데이터 불러오기
+url <- "https://raw.githubusercontent.com/사용자아이디/레포지토리/main/data/school_scores_independent.csv"
+df <- read.csv(url)
+
+# 2. 정규성 검정
+shapiro.test(df$score[df$group == "M"])
+shapiro.test(df$score[df$group == "F"])
+
+# 3. 등분산성 검정
+var.test(score ~ group, data = df)
+
+# 4. 독립 표본 t-검정 
+t.test(score ~ group, data = df, var.equal = TRUE)
+```
+
+### 📝 [결론 해석 모범 답안 작성법]
+> 남학생과 여학생 집단 각각에 대해 정규성 검정을 실시하여 가정을 만족함을 확인하였다. 이어서 Levene의 등분산성 검정 결과 p-value가 유의수준 0.05보다 커 두 집단의 분산이 동일하다는 가정을 만족하였다. 등분산을 가정한 독립표본 t-검정 결과 p-value가 0.05 미만으로 도출되어 귀무가설을 기각한다. 결론적으로 성별에 따른 체육 실기 점수 평균은 통계적으로 유의미한 차이가 있다.
+
+---
+
+## 3. 대응 표본 t-검정 (Paired t-test)
+
+동일한 객체(사람, 기계 등)에 대해 두 가지 처리를 한 후, '처치 전'과 '처치 후' 측정값 간에 차이가 생겼는지 검정합니다. 독립 표본이 아니라는 점이 핵심입니다.
+
+*   **상황:** 고혈압 환자 20명에게 새로운 혈압 강하제를 투여하기 전과 투여한 후의 혈압을 각각 측정하였다. 이 약이 혈압 하강에 유의미한 효과가 있는지 검정하시오.
+*   **가설 (단측 검정):**
+    *   $H_0$ (귀무가설): 투여 후 혈압 - 투여 전 혈압 $\ge 0$ (효과가 없다)
+    *   $H_1$ (대립가설): 투여 후 혈압 - 투여 전 혈압 $< 0$ (투여 후 혈압이 더 낮아졌다 / 효과가 있다)
+
+### 🐍 Python 코드
+```{python}
+import pandas as pd
+import scipy.stats as stats
+
+# 1. 데이터 불러오기
+url = "https://raw.githubusercontent.com/사용자아이디/레포지토리/main/data/blood_pressure_paired.csv"
+df = pd.read_csv(url)
+
+# 차이값 정규성 검정 (after - before)
+df['diff'] = df['after'] - df['before']
+stat, p_val = stats.shapiro(df['diff'])
+print(f"[차이값 정규성 검정] p-value: {p_val:.4f}")
+
+# 2. 대응 표본 t-검정 (단측 검정: less)
+t_stat, t_pval = stats.ttest_rel(df['after'], df['before'], alternative='less')
+print(f"[대응표본 t-검정] p-value: {t_pval:.4f}")
+```
+
+### 📊 R 코드
+```{r}
+# 1. 데이터 불러오기
+url <- "https://raw.githubusercontent.com/사용자아이디/레포지토리/main/data/blood_pressure_paired.csv"
+df <- read.csv(url)
+
+# 2. 정규성 검정 (차이값)
+shapiro.test(df$after - df$before)
+
+# 3. 대응 표본 t-검정 
+t.test(df$after, df$before, paired = TRUE, alternative = "less")
+```
+
+### 📝 [결론 해석 모범 답안 작성법]
+> 환자들의 투여 전후 혈압 차이값(투여 후 - 투여 전)에 대해 정규성 검정을 수행한 결과 정규성을 만족하였다. 약 투여 후 혈압이 더 낮아졌는지를 확인하기 위해 단측(좌측) 대응 표본 t-검정을 수행한 결과, p-value가 유의수준 0.05 미만으로 도출되어 귀무가설을 기각한다. 따라서 새로운 혈압 강하제는 환자들의 혈압을 유의미하게 하강시키는 효과가 있다고 결론 내릴 수 있다.
+
+---
+
+## ⛔ ADP 출제 위원회를 울리는 감점 방지 체크리스트
+
+1.  **"비모수 검정 함수 이름이 뭐였더라?"**
+    *   정규성을 만족하지 않을 때의 대체 함수입니다.
+    *   단일/대응 표본 t-검정 -> **윌콕슨 부호순위 검정** (`wilcoxon()`, `wilcox.test(paired=T)`)
+    *   독립 표본 t-검정 -> **맨-휘트니 U검정** (`mannwhitneyu()`, `wilcox.test()`)
+2.  **"등분산성 검정은 언제 건너뛰나요?"**
+    *   분산을 비교할 '다른 집단'이 없는 **단일 표본**, 그리고 '서로 같은 개체'인 **대응 표본** t-검정에서는 절대 Levene/Bartlett 검정을 하지 않습니다. (시간 낭비 + 감점 요인)
+3.  **"방향 조심: Greater냐 Less냐"**
+    *   두 변수의 순서(`A, B`)를 어떻게 넣느냐에 따라 `greater`와 `less`의 의미가 완전히 반대가 됩니다. `t.test(A, B)` 이면 "A - B"의 차이를 의미하므로, **A가 더 큰지** 알고 싶다면 `greater`가 맞습니다. 헷갈리면 항상 **양측 검정(`two-sided`) 도출 후, t-통계량의 부호를 보고 해석**하는 것도 꿀팁입니다.

@@ -1,0 +1,114 @@
+---
+title: "등분산성이 깨졌을 때의 대처법: Welch's 검정 완벽 가이드"
+format:
+  html:
+    theme: united      
+    toc: false         
+    embed-resources: true
+---
+
+```{r setup, include=FALSE}
+library(reticulate)
+use_condaenv("adp_env", required = TRUE)
+knitr::opts_chunk$set(
+    echo = TRUE,
+    collapse = FALSE,
+    comment = ""
+)
+```
+
+# 분산이 달라도 당황하지 마세요! (이분산성 대처법)
+
+앞선 포스팅에서 우리는 데이터를 분석하기 전에 **'정규성'**과 **'등분산성'**을 먼저 확인해야 한다고 배웠습니다. 그런데 만약 Levene 검정을 돌렸더니 **p-value가 0.05보다 작게 나와서 등분산성 가정이 기각(이분산)**되었다면 어떻게 해야 할까요?
+
+분석을 포기할 필요는 전혀 없습니다! 통계학에서는 분산이 다를 때를 대비하여 수식이 보정된 **"Welch's Method(웰치스 검정)"**를 마련해 두었습니다. ADP 시험의 단골 문제이기도 한 이 상황을 코드로 어떻게 돌파하는지 살펴보겠습니다.
+
+---
+
+## 💥 등분산성이 깨진 데이터 살펴보기
+
+의도적으로 두 집단의 분산 폭이 매우 다른 가상의 시험 성적 데이터를 준비했습니다. (동일한 수준의 점수대지만, A반은 학생들 성적이 오밀조밀하게 모여있고 B반은 널뛰기하는 상황입니다.)
+
+*   **$H_0$ (귀무가설):** 집단 간 분산이 동일하다. (등분산이다)
+*   **$H_1$ (대립가설):** 집단 간 분산이 동일하지 않다. (이분산이다)
+
+### 🐍 Python: 문제가 발생한 상황 (Levene 검정 기각)
+```{python}
+import pandas as pd
+import scipy.stats as stats
+import pingouin as pg # 아나콘다 환경에서 많이 쓰이는 통계 보조 패키지
+
+# 1. GitHub Raw URL에서 이분산 데이터 불러오기
+url = "https://raw.githubusercontent.com/MOON001208/ADP-data-set-and-analysis/main/adp_study/data/heteroscedasticity_scores.csv"
+df = pd.read_csv(url)
+
+# 그룹 쪼개기
+score_A = df[df['group'] == 'A']['score']
+score_B = df[df['group'] == 'B']['score']
+
+# 2. Levene 검정
+stat_lev, p_lev = stats.levene(score_A, score_B)
+print(f"[Levene 등분산 검정] p-value: {p_lev:.4f}")
+```
+> p-value가 0.05보다 훨씬 미만이므로 **등분산성 가정이 기각(이분산)**되었습니다. 기존처럼 일반적인 t-검정을 쓰면 치명적인 오류를 범하게 됩니다!
+
+---
+
+## 🛠️ 대처법 1: 독립표본 t-검정 $\to$ Welch's t-test
+
+두 집단을 비교할 때는 **일반 Student's t-test** 대신 수식이 변형된 **Welch's t-test**를 사용해야 합니다. 
+
+*   **$H_0$ (귀무가설):** A반과 B반의 평균 성적에는 차이가 없다.
+*   **$H_1$ (대립가설):** A반과 B반의 평균 성적에는 유의미한 차이가 있다.
+
+### 🐍 Python 코드
+```{python}
+# equal_var=False 딱 하나만 적어주면 웰치스 t-검정으로 자동 적용됩니다!
+t_stat, t_pval = stats.ttest_ind(score_A, score_B, equal_var=False)
+print(f"[Welch's t-검정] p-value: {t_pval:.4f}")
+```
+
+### 📊 R 코드
+```{r}
+url <- "https://raw.githubusercontent.com/MOON001208/ADP-data-set-and-analysis/main/adp_study/data/heteroscedasticity_scores.csv"
+df <- read.csv(url)
+
+# Levene 검정 확인 (car 패키지)
+library(car)
+leveneTest(score ~ group, data = df)
+
+# Welch's t-test (R에서는 var.equal=FALSE가 아예 기본값입니다!)
+t.test(score ~ group, data = df, var.equal = FALSE)
+```
+
+---
+
+## 🛠️ 대처법 2: 분산분석(ANOVA) $\to$ Welch's ANOVA
+
+만약 비교하려는 집단이 3개 이상(예: A, B, C반)일 때 등분산이 깨졌다면, 일반적인 `f_oneway` 모듈 대신 **Welch's ANOVA**를 사용해야 합니다.
+
+*   **$H_0$ (귀무가설):** 모든 비교 집단의 평균 성적은 서로 동일하다.
+*   **$H_1$ (대립가설):** 적어도 한 집단 이상의 평균 성적은 (나머지와) 다르다.
+
+### 🐍 Python 코드
+파이썬의 `scipy.stats` 기초 모듈에는 웰치스 아노바가 내장되어 있지 않아요! 그래서 실무 및 시험에서는 주로 `pingouin` 라이브러리를 씁니다.
+```{python}
+# pingouin 패키지의 welch_anova 사용
+anova_result = pg.welch_anova(dv='score', between='group', data=df)
+print(anova_result)
+```
+
+### 📊 R 코드
+R은 기초 모듈군에 `oneway.test`라는 이름으로 탑재되어 있어 훨씬 직관적입니다.
+```{r}
+# 일반 ANOVA(aov) 대신 oneway.test 사용
+oneway.test(score ~ group, data = df, var.equal = FALSE)
+```
+
+---
+
+### 📝 [모범 답안 작성법 (ADP 꿀팁)]
+등분산성이 깨진 것을 적극적으로 조치했다는 것을 체점자에게 뽐내야 합니다!
+
+> "Levene의 등분산성 검정 결과 p-value가 0.05 미만으로 도출되어 등분산 가정이 기각되었다. 따라서 두 집단의 분산이 다르다고(이분산) 간주하며, 일반적인 분산분석/t검정 대신 이분산을 가정하는 **Welch's test(웰치스 검정)**를 수행하였다. 검정 결과 p-value가 0.05 이상이므로, 두 집단 간 평균에는 통계적으로 유의미한 차이가 없다고 판단한다."
+

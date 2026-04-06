@@ -1,0 +1,147 @@
+---
+title: "정규성 검정과 등분산성 검정 완벽 가이드 - 코드 및 해석"
+format:
+  html:
+    theme: united      
+    toc: false         
+    embed-resources: true
+---
+
+```{r setup, include=FALSE}
+library(reticulate)
+use_condaenv("adp_env", required = TRUE)
+knitr::opts_chunk$set(
+  echo = TRUE,          
+  collapse = FALSE,     
+  comment = ""          
+)
+```
+
+# 분석의 첫 단추: 정규성과 등분산성 검정 완벽 가이드
+
+모든 모수적 방법(t-검정, 분산분석 등)은 **알맞은 가정**을 전제로 합니다. ADP 실기 시험에서는 단순히 검정만 돌리는 것이 아니라, 데이터를 받았을 때 가장 먼저 "이 데이터가 정규성을 만족하는가?" 그리고 "두 집단의 분산이 동일한가?"를 코드와 함께 증명해야 감전을 피할 수 있습니다.
+
+이번 포스팅에서는 앞서 사용했던 데이터들을 재점검하며, 각각 어떻게 검정하고 가정이 깨지면 어떤 방향으로 나아가야 하는지 알아보겠습니다!
+
+---
+
+## 1. 정규성 검정 (Normality Test)
+
+데이터가 정규 분포를 따르는지 확인합니다. 표본 개수가 적을 때(보통 n < 30) 필수적으로 확인해야 하며, ADP 시험에서는 **Shapiro-Wilk 검정**이 가장 널리 쓰입니다.
+
+*   **$H_0$ (귀무가설):** 데이터가 정규 분포를 따른다.
+*   **$H_1$ (대립가설):** 데이터가 정규 분포를 따르지 않는다.
+
+### 🎯 (CASE 1) 정규성을 만족하는 경우 (앞선 t-검정 데이터)
+
+커피 평균 용량 데이터를 다시 불러와서 검정을 실시해 봅니다.
+
+#### 🐍 Python 코드
+```{python}
+import pandas as pd
+import scipy.stats as stats
+
+# 1. GitHub Raw URL에서 데이터 불러오기 (정상 데이터)
+url = "https://raw.githubusercontent.com/MOON001208/ADP-data-set-and-analysis/main/adp_study/data/coffee_one_sample.csv"
+df_normal = pd.read_csv(url)
+
+# 2. Shapiro-Wilk 검정 (가장 대중적)
+stat, p_val = stats.shapiro(df_normal['volume'])
+print(f"[정규성 검정] p-value: {p_val:.4f}") 
+```
+
+#### 📊 R 코드
+```{r}
+url <- "https://raw.githubusercontent.com/MOON001208/ADP-data-set-and-analysis/main/adp_study/data/coffee_one_sample.csv"
+df_normal <- read.csv(url)
+
+# Shapiro-Wilk 검정
+shapiro.test(df_normal$volume)
+```
+> **해석 Tip:** p-value가 유의수준 0.05보다 크므로(귀무가설 기각 실패), 데이터가 정규 분포를 따른다고 볼 수 있습니다. (따라서 일반적인 t-검정 진행을 할 수 있습니다!)
+
+
+### 💣 (CASE 2) 정규성이 깨진 경우 (앞선 비모수 검정 데이터)
+
+반대로 방금 전 비모수 검정 포스팅에서 썼던, 한쪽으로 치우친 몸무게 데이터를 불러와 볼까요?
+
+#### 🐍 Python 코드
+```{python}
+# 1. 비모수 검정용(치우친) 데이터 불러오기
+url_non = "https://raw.githubusercontent.com/MOON001208/ADP-data-set-and-analysis/main/adp_study/data/nonparam_one_sample.csv"
+df_non = pd.read_csv(url_non)
+
+# 2. Shapiro-Wilk 검정
+stat_non, p_val_non = stats.shapiro(df_non['weight'])
+print(f"[정규성 기각 케이스] p-value: {p_val_non:.4f}") 
+```
+
+#### 📊 R 코드
+```{r}
+url_non <- "https://raw.githubusercontent.com/MOON001208/ADP-data-set-and-analysis/main/adp_study/data/nonparam_one_sample.csv"
+df_non <- read.csv(url_non)
+
+shapiro.test(df_non$weight)
+```
+> **해석 Tip:** p-value가 0.05보다 한참 작으므로 정규 분포를 따른다는 귀무가설을 강하게 기각합니다. 따라서 데이터는 정규성을 띠지 않으며, 모수 검정을 쓸 수 없으니 반드시 **비모수 검정(윌콕슨 부호순위 검정 등)을 수행**해야 합니다!
+
+---
+
+## 2. 등분산성 검정 (Homoscedasticity Test)
+
+**독립 표본 t-검정**이나 **분산분석(ANOVA)**을 수행하기 전, 비교할 독립적인 집단들의 분포(분산) 폭이 엇비슷한지를 확인하는 절차입니다. 
+
+*   **$H_0$ (귀무가설):** 집단 간 분산이 동일하다. (등분산이다)
+*   **$H_1$ (대립가설):** 집단 간 분산이 동일하지 않다. (이분산이다)
+
+대표적으로 **Levene(르벤) 검정**과 **Bartlett(바틀렛) 검정**이 있습니다.
+*   **Bartlett 검정:** 데이터가 완벽히 정규성을 만족할 때 엄격하게 사용
+*   **Levene 검정:** 데이터가 정규성을 만족하지 않거나 뾰족한 모양이어도 사용 가능하여 **무난하고 안전하게 가장 널리 쓰임 (ADP 실기 단골!)**
+
+본 포스팅에서는 독립표본 t-검정 포스팅에서 사용했던 성별 점수(M-남학생, F-여학생) 데이터를 다시 활용합니다.
+
+### 🐍 Python 코드
+```{python}
+# 1. 성별에 따른 독립표본 데이터 불러오기
+url_ind = "https://raw.githubusercontent.com/MOON001208/ADP-data-set-and-analysis/main/adp_study/data/school_scores_independent.csv"
+df_ind = pd.read_csv(url_ind)
+
+# 그룹 편의상 M그룹과 F그룹으로 Series 슬라이싱
+score_M = df_ind[df_ind['group'] == 'M']['score']
+score_F = df_ind[df_ind['group'] == 'F']['score']
+
+# 2. Levene 검정 (비모수적 성향을 가져 가장 대중적임)
+stat_lev, p_lev = stats.levene(score_M, score_F)
+print(f"[Levene 등분산 검정] p-value: {p_lev:.4f}")
+
+# 3. Bartlett 검정 (정규성을 만족할 경우)
+stat_bar, p_bar = stats.bartlett(score_M, score_F)
+print(f"[Bartlett 등분산 검정] p-value: {p_bar:.4f}")
+```
+
+### 📊 R 코드
+```{r}
+url_ind <- "https://raw.githubusercontent.com/MOON001208/ADP-data-set-and-analysis/main/adp_study/data/school_scores_independent.csv"
+df_ind <- read.csv(url_ind)
+
+# 1. var.test (두 집단일 때 사용하는 기본 f-검정)
+var.test(score ~ group, data = df_ind)
+
+# 2. Bartlett 검정 (두 집단 이상, 정규성 가정)
+bartlett.test(score ~ group, data = df_ind)
+
+# 3. Levene 검정 (car 패키지 필요 - ADP 핵심!)
+# 만약 car 패키지가 없다면 install.packages("car") 먼저 실행
+library(car)
+leveneTest(score ~ group, data = df_ind)
+```
+
+### 📝 [등분산성 통과/탈락 시 모범 답안 작성법]
+
+등분산성 결과에 따라 독립모수 t-검정의 옵션이 완전히 달라집니다. 따라서 해석은 아래와 같이 마무리해 줍니다. 
+
+#### (1) Levene p-value > 0.05 일 때 (등분산 만족 - 우리 데이터 케이스)
+> 남학생, 여학생 집단의 성적 데이터를 대상으로 Levene의 등분산성 검정을 실시한 결과, p-value가 0.3541로 유의수준 0.05보다 커 귀무가설을 기각하지 못한다. 따라서 두 집단의 분산은 동일하다고 가정할 수 있으며, 이어진 분석은 **등분산을 가정한 독립표본 t-검정(Student's t-test)**을 수행하는 것이 타당하다. (Python: `equal_var=True`, R: `var.equal=TRUE`)
+
+#### (2) Levene p-value < 0.05 일 때 (이분산성)
+> 집단 간 p-value가 0.05 미만이므로 등분산성 가정을 기각한다. 즉 두 집단의 분산이 다르므로(이분산), 통계 분석 시 일반적인 t-검정이 아닌 **Welch's t-검정(이분산을 가정한 독립표본 t-검정)**을 수행해야 한다. (Python: `equal_var=False`, R: `var.equal=FALSE`)

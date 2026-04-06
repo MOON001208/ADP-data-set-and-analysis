@@ -1,0 +1,5 @@
+treatment,outcome,count
+NewDrug,Improved,1
+NewDrug,NotImproved,9
+Standard,Improved,8
+Standard,NotImproved,2

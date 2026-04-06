@@ -54,8 +54,9 @@ knitr::opts_chunk$set(
 import pandas as pd
 import scipy.stats as stats
 
-# 1. data 폴더에서 데이터 불러오기
-df = pd.read_csv("data/chi_goodness_fit.csv")
+# 1. GitHub Raw URL에서 데이터 불러오기
+url = "https://raw.githubusercontent.com/MOON001208/ADP-data-set-and-analysis/main/adp_study/data/chi_goodness_fit.csv"
+df = pd.read_csv(url)
 
 # 관측 빈도와 기대 빈도 계산
 observed = df['observed']
@@ -68,8 +69,9 @@ print(f"[카이제곱 적합도 검정] p-value: {p_val:.4f}")
 
 ### 📊 R 코드
 ```{r}
-# 1. data 폴더에서 데이터 불러오기
-df <- read.csv("data/chi_goodness_fit.csv")
+# 1. GitHub Raw URL에서 데이터 불러오기
+url <- "https://raw.githubusercontent.com/MOON001208/ADP-data-set-and-analysis/main/adp_study/data/chi_goodness_fit.csv"
+df <- read.csv(url)
 
 # 2. 카이제곱 적합도 검정
 chisq.test(x = df$observed, p = df$expected_ratio)
@@ -94,8 +96,9 @@ chisq.test(x = df$observed, p = df$expected_ratio)
 import pandas as pd
 import scipy.stats as stats
 
-# 1. data 폴더에서 데이터 불러오기
-df = pd.read_csv("data/chi_independence.csv")
+# 1. GitHub Raw URL에서 데이터 불러오기
+url = "https://raw.githubusercontent.com/MOON001208/ADP-data-set-and-analysis/main/adp_study/data/chi_independence.csv"
+df = pd.read_csv(url)
 
 # 교차표 생성
 cont_table = df.pivot(index='gender', columns='purchase', values='count')
@@ -111,8 +114,9 @@ print(expected)
 
 ### 📊 R 코드
 ```{r}
-# 1. data 폴더에서 데이터 불러오기
-df <- read.csv("data/chi_independence.csv")
+# 1. GitHub Raw URL에서 데이터 불러오기
+url <- "https://raw.githubusercontent.com/MOON001208/ADP-data-set-and-analysis/main/adp_study/data/chi_independence.csv"
+df <- read.csv(url)
 
 # 교차표 생성
 tbl <- xtabs(count ~ gender + purchase, data = df)
@@ -141,8 +145,9 @@ chisq.test(tbl, correct = FALSE)
 import pandas as pd
 import scipy.stats as stats
 
-# 1. data 폴더에서 데이터 불러오기
-df = pd.read_csv("data/chi_homogeneity.csv")
+# 1. GitHub Raw URL에서 데이터 불러오기
+url = "https://raw.githubusercontent.com/MOON001208/ADP-data-set-and-analysis/main/adp_study/data/chi_homogeneity.csv"
+df = pd.read_csv(url)
 
 # 교차표 생성
 cont_table = df.pivot(index='branch', columns='satisfaction', values='count')
@@ -157,8 +162,9 @@ print(expected)
 
 ### 📊 R 코드
 ```{r}
-# 1. data 폴더에서 데이터 불러오기
-df <- read.csv("data/chi_homogeneity.csv")
+# 1. GitHub Raw URL에서 데이터 불러오기
+url <- "https://raw.githubusercontent.com/MOON001208/ADP-data-set-and-analysis/main/adp_study/data/chi_homogeneity.csv"
+df <- read.csv(url)
 
 # 교차표 생성
 tbl <- xtabs(count ~ branch + satisfaction, data = df)
@@ -170,6 +176,111 @@ chisq.test(tbl, correct = FALSE)
 
 ### 📝 [결론 해석 모범 답안 작성법]
 > 세 지점의 고객 만족도 비율이 동일한지 확인하기 위해 카이제곱 동질성 검정을 수행한 결과, p-value가 약 0.000083으로 유의수준 0.05 미만으로 도출되었다. 따라서 귀무가설을 기각하며, 적어도 한 지점의 고객 만족도 비율은 다른 지점과 통계적으로 유의미한 차이가 있다고 결론 내릴 수 있다.
+
+---
+
+## 4. 피셔의 정확검정 (Fisher's Exact Test)
+
+2x2 교차표에서 표본 수가 매우 적거나, 기대빈도가 5 미만인 셀이 존재할 때는 카이제곱 검정 대신 **피셔의 정확검정(Fisher's Exact Test)**을 사용하는 것이 안전합니다.
+
+*   **상황:** 신약(NewDrug)과 기존 치료(Standard)에 대해 환자 20명의 호전 여부(Improved / NotImproved)를 조사하였다. 표본 수가 작아 기대빈도가 충분하지 않을 수 있을 때, 치료법과 호전 여부의 관련성이 있는지 검정하시오.
+*   **가설:**
+    *   $H_0$ (귀무가설): 치료법과 호전 여부는 서로 독립이다. (관련이 없다)
+    *   $H_1$ (대립가설): 치료법과 호전 여부는 서로 독립이 아니다. (관련이 있다)
+
+### 🐍 Python 코드
+```{python}
+import pandas as pd
+import scipy.stats as stats
+
+# 1. data 폴더에서 데이터 불러오기
+df = pd.read_csv("data/chi_fisher_exact.csv")
+
+# 교차표 생성
+cont_table = df.pivot(index='treatment', columns='outcome', values='count')
+print(cont_table)
+
+# 2. 기대빈도 확인 (카이제곱 검정의 근사 조건 점검용)
+chi2, chi_p, dof, expected = stats.chi2_contingency(cont_table, correction=False)
+print("[기대빈도]")
+print(expected)
+
+# 3. 피셔의 정확검정
+odds_ratio, p_val = stats.fisher_exact(cont_table, alternative='two-sided')
+print(f"[피셔의 정확검정] p-value: {p_val:.4f}")
+print(f"[오즈비] {odds_ratio:.4f}")
+```
+
+### 📊 R 코드
+```{r}
+# 1. data 폴더에서 데이터 불러오기
+df <- read.csv("data/chi_fisher_exact.csv")
+
+# 교차표 생성
+tbl <- xtabs(count ~ treatment + outcome, data = df)
+tbl
+
+# 2. 기대빈도 확인
+chisq.test(tbl, correct = FALSE)$expected
+
+# 3. 피셔의 정확검정
+fisher.test(tbl)
+```
+
+### 📝 [결론 해석 모범 답안 작성법]
+> 2x2 교차표의 기대빈도를 확인한 결과 일부 셀이 5 미만으로 나타나 카이제곱 검정보다 피셔의 정확검정을 적용하는 것이 타당하다. 검정 결과 p-value가 약 0.0055로 유의수준 0.05 미만으로 도출되어 귀무가설을 기각한다. 따라서 치료법과 호전 여부 사이에는 통계적으로 유의미한 관련성이 있다고 해석할 수 있다.
+
+---
+
+## 5. 교차표 해석 꿀팁 (시험장에서 바로 점수 나는 포인트)
+
+카이제곱 검정에서 p-value만 적고 끝내면 아쉽습니다. **교차표의 행 비율(Row %), 열 비율(Column %)까지 같이 보면 "어느 쪽에서 차이가 났는지"를 더 설득력 있게 해석할 수 있습니다.**
+
+*   **상황:** 앞서 사용한 성별과 신규 상품 구매 여부 데이터를 기준으로, 단순히 "관련이 있다"를 넘어서 어떤 방향의 차이가 있는지 교차표 비율을 해석해 보겠습니다.
+
+### 🐍 Python 코드
+```{python}
+import pandas as pd
+
+# 1. 데이터 불러오기
+url = "https://raw.githubusercontent.com/MOON001208/ADP-data-set-and-analysis/main/adp_study/data/chi_independence.csv"
+df = pd.read_csv(url)
+
+# 교차표 생성
+cont_table = df.pivot(index='gender', columns='purchase', values='count')
+print("[원본 교차표]")
+print(cont_table)
+
+# 2. 행 비율 (%)
+row_pct = cont_table.div(cont_table.sum(axis=1), axis=0) * 100
+print("[행 비율 %]")
+print(row_pct.round(2))
+
+# 3. 열 비율 (%)
+col_pct = cont_table.div(cont_table.sum(axis=0), axis=1) * 100
+print("[열 비율 %]")
+print(col_pct.round(2))
+```
+
+### 📊 R 코드
+```{r}
+# 1. 데이터 불러오기
+url <- "https://raw.githubusercontent.com/MOON001208/ADP-data-set-and-analysis/main/adp_study/data/chi_independence.csv"
+df <- read.csv(url)
+
+# 교차표 생성
+tbl <- xtabs(count ~ gender + purchase, data = df)
+tbl
+
+# 2. 행 비율 (%)
+prop.table(tbl, 1) * 100
+
+# 3. 열 비율 (%)
+prop.table(tbl, 2) * 100
+```
+
+### 📝 [해석 Tip]
+> 이 교차표에서 남성의 구매 비율은 70%, 여성의 구매 비율은 40%로 나타난다. 즉 **행 비율 기준**으로 보면 남성이 여성보다 신규 상품을 구매한 비율이 더 높다고 해석할 수 있다. 반대로 **열 비율 기준**으로 보면 구매자 집단 내부에서 남성이 차지하는 비중이 더 크다고 볼 수 있다. 따라서 ADP 답안에서는 단순히 "관련이 있다"에서 멈추지 말고, **어느 집단에서 어떤 범주 비율이 더 높게 나타났는지**를 교차표 비율과 함께 보완 설명해 주면 훨씬 완성도 있는 해석이 된다.
 
 ---
 
@@ -185,3 +296,9 @@ chisq.test(tbl, correct = FALSE)
     *   적합도 검정 -> **기준 비율과 다른가**
     *   독립성 검정 -> **두 변수 간 관련이 있는가**
     *   동질성 검정 -> **집단 간 비율 구조가 같은가**
+4.  **"2x2 표에 기대빈도 5 미만 셀이 보이면 Fisher를 먼저 떠올리세요."**
+    *   카이제곱 검정은 근사치 기반이라 작은 표본에서는 부정확할 수 있습니다.
+    *   이런 경우 **피셔의 정확검정**을 사용했다는 근거를 답안에 적어주면 훨씬 안정적입니다.
+5.  **"교차표는 숫자만 보지 말고 반드시 비율로 다시 보세요."**
+    *   원본 빈도표만 보면 표본 수가 큰 집단이 더 커 보일 수 있습니다.
+    *   실제 해석은 **행 비율/열 비율**을 함께 봐야 어느 집단의 어떤 응답 경향이 강한지 정확히 설명할 수 있습니다.

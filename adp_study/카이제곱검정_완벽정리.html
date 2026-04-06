@@ -2423,16 +2423,17 @@ window.Quarto = {
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> scipy.stats <span class="im">as</span> stats</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. data 폴더에서 데이터 불러오기</span></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> pd.read_csv(<span class="st">&quot;data/chi_goodness_fit.csv&quot;</span>)</span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="co"># 관측 빈도와 기대 빈도 계산</span></span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>observed <span class="op">=</span> df[<span class="st">&#39;observed&#39;</span>]</span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>expected <span class="op">=</span> df[<span class="st">&#39;expected_ratio&#39;</span>] <span class="op">*</span> observed.<span class="bu">sum</span>()</span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. 카이제곱 적합도 검정</span></span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>chi2, p_val <span class="op">=</span> stats.chisquare(f_obs<span class="op">=</span>observed, f_exp<span class="op">=</span>expected)</span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f&quot;[카이제곱 적합도 검정] p-value: </span><span class="sc">{</span>p_val<span class="sc">:.4f}</span><span class="ss">&quot;</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. GitHub Raw URL에서 데이터 불러오기</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>url <span class="op">=</span> <span class="st">&quot;https://raw.githubusercontent.com/MOON001208/ADP-data-set-and-analysis/main/adp_study/data/chi_goodness_fit.csv&quot;</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> pd.read_csv(url)</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="co"># 관측 빈도와 기대 빈도 계산</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>observed <span class="op">=</span> df[<span class="st">&#39;observed&#39;</span>]</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>expected <span class="op">=</span> df[<span class="st">&#39;expected_ratio&#39;</span>] <span class="op">*</span> observed.<span class="bu">sum</span>()</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. 카이제곱 적합도 검정</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>chi2, p_val <span class="op">=</span> stats.chisquare(f_obs<span class="op">=</span>observed, f_exp<span class="op">=</span>expected)</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f&quot;[카이제곱 적합도 검정] p-value: </span><span class="sc">{</span>p_val<span class="sc">:.4f}</span><span class="ss">&quot;</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[카이제곱 적합도 검정] p-value: 0.0169</code></pre>
 </div>
@@ -2441,11 +2442,12 @@ window.Quarto = {
 <section id="r-코드" class="level3">
 <h3 class="anchored" data-anchor-id="r-코드">📊 R 코드</h3>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. data 폴더에서 데이터 불러오기</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>df <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">&quot;data/chi_goodness_fit.csv&quot;</span>)</span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. 카이제곱 적합도 검정</span></span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="fu">chisq.test</span>(<span class="at">x =</span> df<span class="sc">$</span>observed, <span class="at">p =</span> df<span class="sc">$</span>expected_ratio)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. GitHub Raw URL에서 데이터 불러오기</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>url <span class="ot">&lt;-</span> <span class="st">&quot;https://raw.githubusercontent.com/MOON001208/ADP-data-set-and-analysis/main/adp_study/data/chi_goodness_fit.csv&quot;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>df <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(url)</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. 카이제곱 적합도 검정</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="fu">chisq.test</span>(<span class="at">x =</span> df<span class="sc">$</span>observed, <span class="at">p =</span> df<span class="sc">$</span>expected_ratio)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
     Chi-squared test for given probabilities
@@ -2480,15 +2482,16 @@ X-squared = 10.208, df = 3, p-value = 0.01688</code></pre>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> scipy.stats <span class="im">as</span> stats</span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. data 폴더에서 데이터 불러오기</span></span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> pd.read_csv(<span class="st">&quot;data/chi_independence.csv&quot;</span>)</span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="co"># 교차표 생성</span></span>
-<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>cont_table <span class="op">=</span> df.pivot(index<span class="op">=</span><span class="st">&#39;gender&#39;</span>, columns<span class="op">=</span><span class="st">&#39;purchase&#39;</span>, values<span class="op">=</span><span class="st">&#39;count&#39;</span>)</span>
-<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(cont_table)</span>
-<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. 카이제곱 독립성 검정</span></span>
-<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a><span class="co"># correction=False 로 두면 R의 기본 교차표 해석과 비교하기가 더 쉽습니다.</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. GitHub Raw URL에서 데이터 불러오기</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>url <span class="op">=</span> <span class="st">&quot;https://raw.githubusercontent.com/MOON001208/ADP-data-set-and-analysis/main/adp_study/data/chi_independence.csv&quot;</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> pd.read_csv(url)</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="co"># 교차표 생성</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>cont_table <span class="op">=</span> df.pivot(index<span class="op">=</span><span class="st">&#39;gender&#39;</span>, columns<span class="op">=</span><span class="st">&#39;purchase&#39;</span>, values<span class="op">=</span><span class="st">&#39;count&#39;</span>)</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(cont_table)</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. 카이제곱 독립성 검정</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a><span class="co"># correction=False 로 두면 R의 기본 교차표 해석과 비교하기가 더 쉽습니다.</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>purchase  No  Yes
 gender           
@@ -2514,12 +2517,13 @@ M         15   35</code></pre>
 <section id="r-코드-1" class="level3">
 <h3 class="anchored" data-anchor-id="r-코드-1">📊 R 코드</h3>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. data 폴더에서 데이터 불러오기</span></span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>df <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">&quot;data/chi_independence.csv&quot;</span>)</span>
-<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="co"># 교차표 생성</span></span>
-<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>tbl <span class="ot">&lt;-</span> <span class="fu">xtabs</span>(count <span class="sc">~</span> gender <span class="sc">+</span> purchase, <span class="at">data =</span> df)</span>
-<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>tbl</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. GitHub Raw URL에서 데이터 불러오기</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>url <span class="ot">&lt;-</span> <span class="st">&quot;https://raw.githubusercontent.com/MOON001208/ADP-data-set-and-analysis/main/adp_study/data/chi_independence.csv&quot;</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>df <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(url)</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="co"># 교차표 생성</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>tbl <span class="ot">&lt;-</span> <span class="fu">xtabs</span>(count <span class="sc">~</span> gender <span class="sc">+</span> purchase, <span class="at">data =</span> df)</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>tbl</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>      purchase
 gender No Yes
@@ -2562,14 +2566,15 @@ X-squared = 9.0909, df = 1, p-value = 0.002569</code></pre>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
 <span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> scipy.stats <span class="im">as</span> stats</span>
 <span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. data 폴더에서 데이터 불러오기</span></span>
-<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> pd.read_csv(<span class="st">&quot;data/chi_homogeneity.csv&quot;</span>)</span>
-<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a><span class="co"># 교차표 생성</span></span>
-<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>cont_table <span class="op">=</span> df.pivot(index<span class="op">=</span><span class="st">&#39;branch&#39;</span>, columns<span class="op">=</span><span class="st">&#39;satisfaction&#39;</span>, values<span class="op">=</span><span class="st">&#39;count&#39;</span>)</span>
-<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(cont_table)</span>
-<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. 카이제곱 동질성 검정</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. GitHub Raw URL에서 데이터 불러오기</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>url <span class="op">=</span> <span class="st">&quot;https://raw.githubusercontent.com/MOON001208/ADP-data-set-and-analysis/main/adp_study/data/chi_homogeneity.csv&quot;</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> pd.read_csv(url)</span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a><span class="co"># 교차표 생성</span></span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>cont_table <span class="op">=</span> df.pivot(index<span class="op">=</span><span class="st">&#39;branch&#39;</span>, columns<span class="op">=</span><span class="st">&#39;satisfaction&#39;</span>, values<span class="op">=</span><span class="st">&#39;count&#39;</span>)</span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(cont_table)</span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. 카이제곱 동질성 검정</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>satisfaction  Dissatisfied  Neutral  Satisfied
 branch                                        
@@ -2597,12 +2602,13 @@ C                       25       15         20</code></pre>
 <section id="r-코드-2" class="level3">
 <h3 class="anchored" data-anchor-id="r-코드-2">📊 R 코드</h3>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. data 폴더에서 데이터 불러오기</span></span>
-<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>df <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">&quot;data/chi_homogeneity.csv&quot;</span>)</span>
-<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a><span class="co"># 교차표 생성</span></span>
-<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>tbl <span class="ot">&lt;-</span> <span class="fu">xtabs</span>(count <span class="sc">~</span> branch <span class="sc">+</span> satisfaction, <span class="at">data =</span> df)</span>
-<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a>tbl</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. GitHub Raw URL에서 데이터 불러오기</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>url <span class="ot">&lt;-</span> <span class="st">&quot;https://raw.githubusercontent.com/MOON001208/ADP-data-set-and-analysis/main/adp_study/data/chi_homogeneity.csv&quot;</span></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>df <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(url)</span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a><span class="co"># 교차표 생성</span></span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a>tbl <span class="ot">&lt;-</span> <span class="fu">xtabs</span>(count <span class="sc">~</span> branch <span class="sc">+</span> satisfaction, <span class="at">data =</span> df)</span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a>tbl</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>      satisfaction
 branch Dissatisfied Neutral Satisfied
@@ -2629,6 +2635,212 @@ X-squared = 23.917, df = 4, p-value = 8.301e-05</code></pre>
 <hr>
 </section>
 </section>
+<section id="피셔의-정확검정-fishers-exact-test" class="level2">
+<h2 class="anchored" data-anchor-id="피셔의-정확검정-fishers-exact-test">4. 피셔의 정확검정 (Fisher’s Exact Test)</h2>
+<p>2x2 교차표에서 표본 수가 매우 적거나, 기대빈도가 5 미만인 셀이 존재할 때는 카이제곱 검정 대신 <strong>피셔의 정확검정(Fisher’s Exact Test)</strong>을 사용하는 것이 안전합니다.</p>
+<ul>
+<li><strong>상황:</strong> 신약(NewDrug)과 기존 치료(Standard)에 대해 환자 20명의 호전 여부(Improved / NotImproved)를 조사하였다. 표본 수가 작아 기대빈도가 충분하지 않을 수 있을 때, 치료법과 호전 여부의 관련성이 있는지 검정하시오.</li>
+<li><strong>가설:</strong>
+<ul>
+<li><span class="math inline">\(H_0\)</span> (귀무가설): 치료법과 호전 여부는 서로 독립이다. (관련이 없다)</li>
+<li><span class="math inline">\(H_1\)</span> (대립가설): 치료법과 호전 여부는 서로 독립이 아니다. (관련이 있다)</li>
+</ul></li>
+</ul>
+<section id="python-코드-3" class="level3">
+<h3 class="anchored" data-anchor-id="python-코드-3">🐍 Python 코드</h3>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb29"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> scipy.stats <span class="im">as</span> stats</span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. data 폴더에서 데이터 불러오기</span></span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> pd.read_csv(<span class="st">&quot;data/chi_fisher_exact.csv&quot;</span>)</span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a><span class="co"># 교차표 생성</span></span>
+<span id="cb29-8"><a href="#cb29-8" aria-hidden="true" tabindex="-1"></a>cont_table <span class="op">=</span> df.pivot(index<span class="op">=</span><span class="st">&#39;treatment&#39;</span>, columns<span class="op">=</span><span class="st">&#39;outcome&#39;</span>, values<span class="op">=</span><span class="st">&#39;count&#39;</span>)</span>
+<span id="cb29-9"><a href="#cb29-9" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(cont_table)</span>
+<span id="cb29-10"><a href="#cb29-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-11"><a href="#cb29-11" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. 기대빈도 확인 (카이제곱 검정의 근사 조건 점검용)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>outcome    Improved  NotImproved
+treatment                       
+NewDrug           1            9
+Standard          8            2</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb31"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>chi2, chi_p, dof, expected <span class="op">=</span> stats.chi2_contingency(cont_table, correction<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">&quot;[기대빈도]&quot;</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[기대빈도]</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb33"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(expected)</span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. 피셔의 정확검정</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[[4.5 5.5]
+ [4.5 5.5]]</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb35"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>odds_ratio, p_val <span class="op">=</span> stats.fisher_exact(cont_table, alternative<span class="op">=</span><span class="st">&#39;two-sided&#39;</span>)</span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f&quot;[피셔의 정확검정] p-value: </span><span class="sc">{</span>p_val<span class="sc">:.4f}</span><span class="ss">&quot;</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[피셔의 정확검정] p-value: 0.0055</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb37"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f&quot;[오즈비] </span><span class="sc">{</span>odds_ratio<span class="sc">:.4f}</span><span class="ss">&quot;</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[오즈비] 0.0278</code></pre>
+</div>
+</div>
+</section>
+<section id="r-코드-3" class="level3">
+<h3 class="anchored" data-anchor-id="r-코드-3">📊 R 코드</h3>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. data 폴더에서 데이터 불러오기</span></span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a>df <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">&quot;data/chi_fisher_exact.csv&quot;</span>)</span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a><span class="co"># 교차표 생성</span></span>
+<span id="cb39-5"><a href="#cb39-5" aria-hidden="true" tabindex="-1"></a>tbl <span class="ot">&lt;-</span> <span class="fu">xtabs</span>(count <span class="sc">~</span> treatment <span class="sc">+</span> outcome, <span class="at">data =</span> df)</span>
+<span id="cb39-6"><a href="#cb39-6" aria-hidden="true" tabindex="-1"></a>tbl</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>          outcome
+treatment  Improved NotImproved
+  NewDrug         1           9
+  Standard        8           2</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb41"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. 기대빈도 확인</span></span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a><span class="fu">chisq.test</span>(tbl, <span class="at">correct =</span> <span class="cn">FALSE</span>)<span class="sc">$</span>expected</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning in chisq.test(tbl, correct = FALSE): 카이제곱 approximation은 정확하지
+않을수도 있습니다</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>          outcome
+treatment  Improved NotImproved
+  NewDrug       4.5         5.5
+  Standard      4.5         5.5</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb44"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. 피셔의 정확검정</span></span>
+<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a><span class="fu">fisher.test</span>(tbl)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+    Fisher&#39;s Exact Test for Count Data
+
+data:  tbl
+p-value = 0.005477
+alternative hypothesis: true odds ratio is not equal to 1
+95 percent confidence interval:
+ 0.0005746857 0.4859089384
+sample estimates:
+odds ratio 
+0.03659475 </code></pre>
+</div>
+</div>
+</section>
+<section id="결론-해석-모범-답안-작성법-3" class="level3">
+<h3 class="anchored" data-anchor-id="결론-해석-모범-답안-작성법-3">📝 [결론 해석 모범 답안 작성법]</h3>
+<blockquote class="blockquote">
+<p>2x2 교차표의 기대빈도를 확인한 결과 일부 셀이 5 미만으로 나타나 카이제곱 검정보다 피셔의 정확검정을 적용하는 것이 타당하다. 검정 결과 p-value가 약 0.0055로 유의수준 0.05 미만으로 도출되어 귀무가설을 기각한다. 따라서 치료법과 호전 여부 사이에는 통계적으로 유의미한 관련성이 있다고 해석할 수 있다.</p>
+</blockquote>
+<hr>
+</section>
+</section>
+<section id="교차표-해석-꿀팁-시험장에서-바로-점수-나는-포인트" class="level2">
+<h2 class="anchored" data-anchor-id="교차표-해석-꿀팁-시험장에서-바로-점수-나는-포인트">5. 교차표 해석 꿀팁 (시험장에서 바로 점수 나는 포인트)</h2>
+<p>카이제곱 검정에서 p-value만 적고 끝내면 아쉽습니다. <strong>교차표의 행 비율(Row %), 열 비율(Column %)까지 같이 보면 “어느 쪽에서 차이가 났는지”를 더 설득력 있게 해석할 수 있습니다.</strong></p>
+<ul>
+<li><strong>상황:</strong> 앞서 사용한 성별과 신규 상품 구매 여부 데이터를 기준으로, 단순히 “관련이 있다”를 넘어서 어떤 방향의 차이가 있는지 교차표 비율을 해석해 보겠습니다.</li>
+</ul>
+<section id="python-코드-4" class="level3">
+<h3 class="anchored" data-anchor-id="python-코드-4">🐍 Python 코드</h3>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb46"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb46-3"><a href="#cb46-3" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. 데이터 불러오기</span></span>
+<span id="cb46-4"><a href="#cb46-4" aria-hidden="true" tabindex="-1"></a>url <span class="op">=</span> <span class="st">&quot;https://raw.githubusercontent.com/MOON001208/ADP-data-set-and-analysis/main/adp_study/data/chi_independence.csv&quot;</span></span>
+<span id="cb46-5"><a href="#cb46-5" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> pd.read_csv(url)</span>
+<span id="cb46-6"><a href="#cb46-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb46-7"><a href="#cb46-7" aria-hidden="true" tabindex="-1"></a><span class="co"># 교차표 생성</span></span>
+<span id="cb46-8"><a href="#cb46-8" aria-hidden="true" tabindex="-1"></a>cont_table <span class="op">=</span> df.pivot(index<span class="op">=</span><span class="st">&#39;gender&#39;</span>, columns<span class="op">=</span><span class="st">&#39;purchase&#39;</span>, values<span class="op">=</span><span class="st">&#39;count&#39;</span>)</span>
+<span id="cb46-9"><a href="#cb46-9" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">&quot;[원본 교차표]&quot;</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[원본 교차표]</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb48"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(cont_table)</span>
+<span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb48-3"><a href="#cb48-3" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. 행 비율 (%)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>purchase  No  Yes
+gender           
+F         30   20
+M         15   35</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb50"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a>row_pct <span class="op">=</span> cont_table.div(cont_table.<span class="bu">sum</span>(axis<span class="op">=</span><span class="dv">1</span>), axis<span class="op">=</span><span class="dv">0</span>) <span class="op">*</span> <span class="dv">100</span></span>
+<span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">&quot;[행 비율 %]&quot;</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[행 비율 %]</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb52"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(row_pct.<span class="bu">round</span>(<span class="dv">2</span>))</span>
+<span id="cb52-2"><a href="#cb52-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb52-3"><a href="#cb52-3" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. 열 비율 (%)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>purchase    No   Yes
+gender              
+F         60.0  40.0
+M         30.0  70.0</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb54"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a>col_pct <span class="op">=</span> cont_table.div(cont_table.<span class="bu">sum</span>(axis<span class="op">=</span><span class="dv">0</span>), axis<span class="op">=</span><span class="dv">1</span>) <span class="op">*</span> <span class="dv">100</span></span>
+<span id="cb54-2"><a href="#cb54-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">&quot;[열 비율 %]&quot;</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[열 비율 %]</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb56"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(col_pct.<span class="bu">round</span>(<span class="dv">2</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>purchase     No    Yes
+gender                
+F         66.67  36.36
+M         33.33  63.64</code></pre>
+</div>
+</div>
+</section>
+<section id="r-코드-4" class="level3">
+<h3 class="anchored" data-anchor-id="r-코드-4">📊 R 코드</h3>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb58"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. 데이터 불러오기</span></span>
+<span id="cb58-2"><a href="#cb58-2" aria-hidden="true" tabindex="-1"></a>url <span class="ot">&lt;-</span> <span class="st">&quot;https://raw.githubusercontent.com/MOON001208/ADP-data-set-and-analysis/main/adp_study/data/chi_independence.csv&quot;</span></span>
+<span id="cb58-3"><a href="#cb58-3" aria-hidden="true" tabindex="-1"></a>df <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(url)</span>
+<span id="cb58-4"><a href="#cb58-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb58-5"><a href="#cb58-5" aria-hidden="true" tabindex="-1"></a><span class="co"># 교차표 생성</span></span>
+<span id="cb58-6"><a href="#cb58-6" aria-hidden="true" tabindex="-1"></a>tbl <span class="ot">&lt;-</span> <span class="fu">xtabs</span>(count <span class="sc">~</span> gender <span class="sc">+</span> purchase, <span class="at">data =</span> df)</span>
+<span id="cb58-7"><a href="#cb58-7" aria-hidden="true" tabindex="-1"></a>tbl</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>      purchase
+gender No Yes
+     F 30  20
+     M 15  35</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb60"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. 행 비율 (%)</span></span>
+<span id="cb60-2"><a href="#cb60-2" aria-hidden="true" tabindex="-1"></a><span class="fu">prop.table</span>(tbl, <span class="dv">1</span>) <span class="sc">*</span> <span class="dv">100</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>      purchase
+gender No Yes
+     F 60  40
+     M 30  70</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb62"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. 열 비율 (%)</span></span>
+<span id="cb62-2"><a href="#cb62-2" aria-hidden="true" tabindex="-1"></a><span class="fu">prop.table</span>(tbl, <span class="dv">2</span>) <span class="sc">*</span> <span class="dv">100</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>      purchase
+gender       No      Yes
+     F 66.66667 36.36364
+     M 33.33333 63.63636</code></pre>
+</div>
+</div>
+</section>
+<section id="해석-tip" class="level3">
+<h3 class="anchored" data-anchor-id="해석-tip">📝 [해석 Tip]</h3>
+<blockquote class="blockquote">
+<p>이 교차표에서 남성의 구매 비율은 70%, 여성의 구매 비율은 40%로 나타난다. 즉 <strong>행 비율 기준</strong>으로 보면 남성이 여성보다 신규 상품을 구매한 비율이 더 높다고 해석할 수 있다. 반대로 <strong>열 비율 기준</strong>으로 보면 구매자 집단 내부에서 남성이 차지하는 비중이 더 크다고 볼 수 있다. 따라서 ADP 답안에서는 단순히 “관련이 있다”에서 멈추지 말고, <strong>어느 집단에서 어떤 범주 비율이 더 높게 나타났는지</strong>를 교차표 비율과 함께 보완 설명해 주면 훨씬 완성도 있는 해석이 된다.</p>
+</blockquote>
+<hr>
+</section>
+</section>
 <section id="adp-출제-위원회를-울리는-감점-방지-체크리스트" class="level2">
 <h2 class="anchored" data-anchor-id="adp-출제-위원회를-울리는-감점-방지-체크리스트">⛔ ADP 출제 위원회를 울리는 감점 방지 체크리스트</h2>
 <ol type="1">
@@ -2647,6 +2859,16 @@ X-squared = 23.917, df = 4, p-value = 8.301e-05</code></pre>
 <li>적합도 검정 -&gt; <strong>기준 비율과 다른가</strong></li>
 <li>독립성 검정 -&gt; <strong>두 변수 간 관련이 있는가</strong></li>
 <li>동질성 검정 -&gt; <strong>집단 간 비율 구조가 같은가</strong></li>
+</ul></li>
+<li><strong>“2x2 표에 기대빈도 5 미만 셀이 보이면 Fisher를 먼저 떠올리세요.”</strong>
+<ul>
+<li>카이제곱 검정은 근사치 기반이라 작은 표본에서는 부정확할 수 있습니다.</li>
+<li>이런 경우 <strong>피셔의 정확검정</strong>을 사용했다는 근거를 답안에 적어주면 훨씬 안정적입니다.</li>
+</ul></li>
+<li><strong>“교차표는 숫자만 보지 말고 반드시 비율로 다시 보세요.”</strong>
+<ul>
+<li>원본 빈도표만 보면 표본 수가 큰 집단이 더 커 보일 수 있습니다.</li>
+<li>실제 해석은 <strong>행 비율/열 비율</strong>을 함께 봐야 어느 집단의 어떤 응답 경향이 강한지 정확히 설명할 수 있습니다.</li>
 </ul></li>
 </ol>
 </section>

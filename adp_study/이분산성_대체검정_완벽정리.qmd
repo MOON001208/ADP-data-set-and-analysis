@@ -97,7 +97,7 @@ t.test(score ~ group, data = df, var.equal = FALSE)
 Python의 기본 `scipy.stats` 모듈에는 웰치스 아노바(Welch's ANOVA)가 내장되어 있지 않으므로, 주로 `pingouin` 패키지를 활용합니다.
 ```{python}
 # 3집단 이분산 데이터 불러오기
-url_anova = "data/heteroscedasticity_anova_scores.csv"
+url_anova = "https://raw.githubusercontent.com/MOON001208/ADP-data-set-and-analysis/main/adp_study/data/heteroscedasticity_anova_scores.csv"
 df_anova = pd.read_csv(url_anova)
 
 # Levene 검정으로 등분산성 확인
@@ -115,7 +115,7 @@ print(anova_result)
 ### 📊 R 코드
 R의 경우 내장 함수인 `oneway.test`를 통해 손쉽게 구현할 수 있습니다.
 ```{r}
-url_anova <- "data/heteroscedasticity_anova_scores.csv"
+url_anova <- "https://raw.githubusercontent.com/MOON001208/ADP-data-set-and-analysis/main/adp_study/data/heteroscedasticity_anova_scores.csv"
 df_anova <- read.csv(url_anova)
 
 # Levene 검정으로 등분산성 확인

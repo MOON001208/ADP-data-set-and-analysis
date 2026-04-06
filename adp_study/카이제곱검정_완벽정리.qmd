@@ -1,0 +1,187 @@
+---
+title: "제목: ADP 실기를 위한 카이제곱 검정 정리"
+format:
+  html:
+    theme: united      # 가독성 높은 테마
+    toc: false         # 네이버 블로그는 자체 목록을 쓰거나 필요 없을 때가 많음
+    embed-resources: true
+---
+
+```{r setup, include=FALSE}
+library(reticulate)
+use_condaenv("adp_env", required = TRUE)
+knitr::opts_chunk$set(
+    echo = TRUE, # 코드 표시
+    collapse = FALSE, # 네이버 블로그는 코드와 결과가 확실히 분리되는 게 보기 좋음
+    comment = "" # 결과창 앞의 ## 제거 (깔끔하게 보임)
+)
+```
+
+# 지문만 보고 1초 만에 파악하는 카이제곱 검정(Chi-square test) 완벽 가이드
+
+**카이제곱 검정(Chi-square test)**은 범주형 데이터의 **실제 빈도(Observed Frequency)**와 **기대 빈도(Expected Frequency)**를 비교하여, 관측된 차이가 우연인지 아닌지를 검정하는 방법입니다. ADP 실기 시험에서는 지문에 등장하는 **'변수의 개수'**와 **'비교 목적'**에 따라 적합도 검정, 독립성 검정, 동질성 검정 중 알맞은 유형을 정확히 선택해야 합니다.
+
+## 🎯 [핵심] ADP 지문 키워드로 보는 카이제곱 검정 선택 가이드
+
+문제를 읽고 아래의 키워드에 따라 알맞은 검정을 선택하세요.
+
+| 검정 종류 | 비교 대상 | ADP 지문 단골 키워드 (이렇게 문제에 나옵니다!) |
+| :--- | :--- | :--- |
+| **적합도 검정** <br>(Goodness-of-fit) | **1개 범주형 변수** vs <br>알려진 **기준 비율** | "고객 유입 경로 비율이 **기존 가정(4:3:2:1)** 과 같은지 검정하시오." <br>"주사위 눈의 출현 빈도가 **균등한지** 확인하시오." |
+| **독립성 검정** <br>(Independence) | 하나의 표본에서 측정한 <br>**2개의 범주형 변수** | "**성별**과 **구매 여부**가 서로 독립인지 검정하시오." <br>"흡연 여부와 질병 발생 간 관련성이 있는가?" |
+| **동질성 검정** <br>(Homogeneity) | 여러 집단 간 <br>**범주 비율의 동일성** | "**A/B/C 지점**의 고객 만족도 비율이 동일한지 검정하시오." <br>"지역별 선호 브랜드 분포가 같은가?" |
+
+> 💡 **판단 Tip:** 
+> *   "기준 비율/이론적 분포와 같은가?" -> **적합도 검정**
+> *   "두 범주형 변수가 관련 있는가?" -> **독립성 검정**
+> *   "여러 집단의 비율 구조가 같은가?" -> **동질성 검정**
+
+카이제곱 검정은 t-검정처럼 정규성 가정을 전제로 하지는 않지만, 대신 **각 셀의 기대빈도(Expected Frequency)가 충분히 커야 한다**는 조건을 확인해야 합니다. 일반적으로 기대빈도가 5 미만인 셀이 많으면 Fisher's Exact Test 등의 대안을 고려해야 합니다.
+
+---
+
+## 1. 적합도 검정 (Goodness-of-fit test)
+
+하나의 범주형 변수에 대해, 관측된 빈도 분포가 사전에 알려진 이론적 비율과 일치하는지 확인합니다.
+
+*   **상황:** 한 쇼핑몰은 고객 유입 경로 비율이 온라인 40%, 오프라인 30%, 전화 20%, 기타 10%라고 보고하고 있다. 실제 100명의 고객 데이터를 확인한 결과, 이 비율이 기존 가정과 일치하는지 검정하시오.
+*   **가설:**
+    *   $H_0$ (귀무가설): 고객 유입 경로 비율은 기존 가정(0.4, 0.3, 0.2, 0.1)과 동일하다.
+    *   $H_1$ (대립가설): 고객 유입 경로 비율은 기존 가정과 동일하지 않다.
+
+### 🐍 Python 코드
+```{python}
+import pandas as pd
+import scipy.stats as stats
+
+# 1. data 폴더에서 데이터 불러오기
+df = pd.read_csv("data/chi_goodness_fit.csv")
+
+# 관측 빈도와 기대 빈도 계산
+observed = df['observed']
+expected = df['expected_ratio'] * observed.sum()
+
+# 2. 카이제곱 적합도 검정
+chi2, p_val = stats.chisquare(f_obs=observed, f_exp=expected)
+print(f"[카이제곱 적합도 검정] p-value: {p_val:.4f}")
+```
+
+### 📊 R 코드
+```{r}
+# 1. data 폴더에서 데이터 불러오기
+df <- read.csv("data/chi_goodness_fit.csv")
+
+# 2. 카이제곱 적합도 검정
+chisq.test(x = df$observed, p = df$expected_ratio)
+```
+
+### 📝 [결론 해석 모범 답안 작성법]
+> 고객 유입 경로에 대한 카이제곱 적합도 검정을 수행한 결과, p-value가 약 0.0169로 유의수준 0.05 미만으로 도출되었다. 따라서 귀무가설을 기각하며, 실제 고객 유입 경로 비율은 회사가 제시한 기존 가정과 통계적으로 유의미한 차이가 있다고 판단할 수 있다.
+
+---
+
+## 2. 독립성 검정 (Chi-square test of independence)
+
+하나의 표본에서 관측한 두 범주형 변수가 서로 관련이 있는지, 즉 독립인지 확인합니다.
+
+*   **상황:** 고객 100명에 대해 성별(M/F)과 신규 상품 구매 여부(Yes/No)를 조사하였다. 성별과 구매 여부가 서로 독립인지 검정하시오.
+*   **가설:**
+    *   $H_0$ (귀무가설): 성별과 신규 상품 구매 여부는 서로 독립이다. (관련이 없다)
+    *   $H_1$ (대립가설): 성별과 신규 상품 구매 여부는 서로 독립이 아니다. (관련이 있다)
+
+### 🐍 Python 코드
+```{python}
+import pandas as pd
+import scipy.stats as stats
+
+# 1. data 폴더에서 데이터 불러오기
+df = pd.read_csv("data/chi_independence.csv")
+
+# 교차표 생성
+cont_table = df.pivot(index='gender', columns='purchase', values='count')
+print(cont_table)
+
+# 2. 카이제곱 독립성 검정
+# correction=False 로 두면 R의 기본 교차표 해석과 비교하기가 더 쉽습니다.
+chi2, p_val, dof, expected = stats.chi2_contingency(cont_table, correction=False)
+print(f"[카이제곱 독립성 검정] p-value: {p_val:.4f}")
+print("[기대빈도]")
+print(expected)
+```
+
+### 📊 R 코드
+```{r}
+# 1. data 폴더에서 데이터 불러오기
+df <- read.csv("data/chi_independence.csv")
+
+# 교차표 생성
+tbl <- xtabs(count ~ gender + purchase, data = df)
+tbl
+
+# 2. 카이제곱 독립성 검정
+chisq.test(tbl, correct = FALSE)
+```
+
+### 📝 [결론 해석 모범 답안 작성법]
+> 성별과 신규 상품 구매 여부의 관련성을 확인하기 위해 카이제곱 독립성 검정을 수행한 결과, p-value가 약 0.0026으로 유의수준 0.05 미만으로 도출되었다. 따라서 귀무가설을 기각하며, 성별과 신규 상품 구매 여부는 서로 독립이라고 보기 어렵고 통계적으로 유의미한 관련성이 존재한다고 해석할 수 있다.
+
+---
+
+## 3. 동질성 검정 (Chi-square test of homogeneity)
+
+여러 집단에서 범주형 반응의 비율이 동일한지 확인합니다. 계산 함수는 독립성 검정과 사실상 같지만, **해석의 초점이 '집단 간 비율 비교'**라는 점이 다릅니다.
+
+*   **상황:** A, B, C 세 지점에서 고객 만족도(Satisfied / Neutral / Dissatisfied)를 조사하였다. 세 지점의 만족도 비율 분포가 동일한지 검정하시오.
+*   **가설:**
+    *   $H_0$ (귀무가설): A, B, C 세 지점의 고객 만족도 비율은 모두 동일하다.
+    *   $H_1$ (대립가설): 적어도 한 지점의 고객 만족도 비율은 다른 지점과 다르다.
+
+### 🐍 Python 코드
+```{python}
+import pandas as pd
+import scipy.stats as stats
+
+# 1. data 폴더에서 데이터 불러오기
+df = pd.read_csv("data/chi_homogeneity.csv")
+
+# 교차표 생성
+cont_table = df.pivot(index='branch', columns='satisfaction', values='count')
+print(cont_table)
+
+# 2. 카이제곱 동질성 검정
+chi2, p_val, dof, expected = stats.chi2_contingency(cont_table, correction=False)
+print(f"[카이제곱 동질성 검정] p-value: {p_val:.4f}")
+print("[기대빈도]")
+print(expected)
+```
+
+### 📊 R 코드
+```{r}
+# 1. data 폴더에서 데이터 불러오기
+df <- read.csv("data/chi_homogeneity.csv")
+
+# 교차표 생성
+tbl <- xtabs(count ~ branch + satisfaction, data = df)
+tbl
+
+# 2. 카이제곱 동질성 검정
+chisq.test(tbl, correct = FALSE)
+```
+
+### 📝 [결론 해석 모범 답안 작성법]
+> 세 지점의 고객 만족도 비율이 동일한지 확인하기 위해 카이제곱 동질성 검정을 수행한 결과, p-value가 약 0.000083으로 유의수준 0.05 미만으로 도출되었다. 따라서 귀무가설을 기각하며, 적어도 한 지점의 고객 만족도 비율은 다른 지점과 통계적으로 유의미한 차이가 있다고 결론 내릴 수 있다.
+
+---
+
+## ⛔ ADP 출제 위원회를 울리는 감점 방지 체크리스트
+
+1.  **"독립성 검정이랑 동질성 검정이 뭐가 다르죠?"**
+    *   계산은 둘 다 카이제곱 검정으로 거의 동일하게 수행합니다.
+    *   다만 **독립성 검정**은 "두 변수가 관련 있는가?"에 초점이 있고, **동질성 검정**은 "여러 집단의 비율 구조가 같은가?"에 초점이 있습니다.
+2.  **"기대빈도 5 미만이면 그냥 진행해도 되나요?"**
+    *   기대빈도가 너무 작은 셀이 많으면 카이제곱 근사가 부정확해질 수 있습니다.
+    *   특히 **2x2 표에서 기대빈도가 작을 때는 Fisher's Exact Test**를 우선적으로 고려해야 합니다.
+3.  **"비율이 다르다는 말과 관련이 있다는 말을 헷갈리지 마세요."**
+    *   적합도 검정 -> **기준 비율과 다른가**
+    *   독립성 검정 -> **두 변수 간 관련이 있는가**
+    *   동질성 검정 -> **집단 간 비율 구조가 같은가**

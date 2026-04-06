@@ -17,20 +17,21 @@ knitr::opts_chunk$set(
 )
 ```
 
-# 분산이 달라도 당황하지 마세요! (이분산성 대처법)
+# 등분산성이 기각되었을 때의 대처법 (이분산성 문제)
 
-앞선 포스팅에서 우리는 데이터를 분석하기 전에 **'정규성'**과 **'등분산성'**을 먼저 확인해야 한다고 배웠습니다. 그런데 만약 Levene 검정을 돌렸더니 **p-value가 0.05보다 작게 나와서 등분산성 가정이 기각(이분산)**되었다면 어떻게 해야 할까요?
+데이터 분석 시 모수 검정을 적용하기 전 **'정규성'**과 **'등분산성'** 확인은 필수적입니다. 만약 Levene 검정 결과 **p-value가 유의수준 0.05 미만으로 도출되어 등분산성 가정이 기각(이분산)**되는 경우에는 일반적인 분산분석 등의 방법을 그대로 적용해서는 안 됩니다.
 
-분석을 포기할 필요는 전혀 없습니다! 통계학에서는 분산이 다를 때를 대비하여 수식이 보정된 **"Welch's Method(웰치스 검정)"**를 마련해 두었습니다. ADP 시험의 단골 문제이기도 한 이 상황을 코드로 어떻게 돌파하는지 살펴보겠습니다.
+이러한 집단 간 분산이 다를 경우를 대비하여, 수식이 보정된 **"Welch's Method(웰치스 검정)"**을 사용하게 됩니다. 해당 상황은 ADP 실기 시험에 자주 출제되므로, 올바른 함수와 파라미터 적용 방법을 숙지해야 합니다.
 
 ---
 
-## 💥 등분산성이 깨진 데이터 살펴보기
+## 1. 등분산성이 기각되는 데이터 확인
 
-의도적으로 두 집단의 분산 폭이 매우 다른 가상의 시험 성적 데이터를 준비했습니다. (동일한 수준의 점수대지만, A반은 학생들 성적이 오밀조밀하게 모여있고 B반은 널뛰기하는 상황입니다.)
+집단 간 분산의 차이가 큰 가상의 시험 성적 데이터를 통해 상황을 재현합니다.
 
-*   **$H_0$ (귀무가설):** 집단 간 분산이 동일하다. (등분산이다)
-*   **$H_1$ (대립가설):** 집단 간 분산이 동일하지 않다. (이분산이다)
+*   **가설:**
+    *   $H_0$ (귀무가설): 집단 간 분산이 동일하다. (등분산이다)
+    *   $H_1$ (대립가설): 집단 간 분산이 동일하지 않다. (이분산이다)
 
 ### 🐍 Python: 문제가 발생한 상황 (Levene 검정 기각)
 ```{python}
@@ -50,7 +51,7 @@ score_B = df[df['group'] == 'B']['score']
 stat_lev, p_lev = stats.levene(score_A, score_B)
 print(f"[Levene 등분산 검정] p-value: {p_lev:.4f}")
 ```
-> p-value가 0.05보다 훨씬 미만이므로 **등분산성 가정이 기각(이분산)**되었습니다. 기존처럼 일반적인 t-검정을 쓰면 치명적인 오류를 범하게 됩니다!
+> p-value가 0.05 미만이므로 **등분산성 가정이 기각(이분산)**되었습니다. 이에 따라 분산이 동일하다는 가정을 바탕으로 하는 일반적인 모수 검정 대신 웰치스 검정을 수행해야 합니다.
 
 ---
 
@@ -58,8 +59,9 @@ print(f"[Levene 등분산 검정] p-value: {p_lev:.4f}")
 
 두 집단을 비교할 때는 **일반 Student's t-test** 대신 수식이 변형된 **Welch's t-test**를 사용해야 합니다. 
 
-*   **$H_0$ (귀무가설):** A반과 B반의 평균 성적에는 차이가 없다.
-*   **$H_1$ (대립가설):** A반과 B반의 평균 성적에는 유의미한 차이가 있다.
+*   **가설:**
+    *   $H_0$ (귀무가설): A반과 B반의 평균 성적에는 차이가 없다.
+    *   $H_1$ (대립가설): A반과 B반의 평균 성적에는 유의미한 차이가 있다.
 
 ### 🐍 Python 코드
 ```{python}
@@ -85,30 +87,48 @@ t.test(score ~ group, data = df, var.equal = FALSE)
 
 ## 🛠️ 대처법 2: 분산분석(ANOVA) $\to$ Welch's ANOVA
 
-만약 비교하려는 집단이 3개 이상(예: A, B, C반)일 때 등분산이 깨졌다면, 일반적인 `f_oneway` 모듈 대신 **Welch's ANOVA**를 사용해야 합니다.
+만약 비교하려는 집단이 3개 이상일 때 등분산이 깨졌다면, 일반적인 ANOVA 대신 **Welch's ANOVA**를 사용해야 합니다. 아래에서는 A, B, C 세 집단으로 구성된 별도 이분산 예시 데이터(`heteroscedasticity_anova_scores.csv`)를 사용합니다.
 
-*   **$H_0$ (귀무가설):** 모든 비교 집단의 평균 성적은 서로 동일하다.
-*   **$H_1$ (대립가설):** 적어도 한 집단 이상의 평균 성적은 (나머지와) 다르다.
+*   **가설:**
+    *   $H_0$ (귀무가설): 모든 비교 집단의 평균 성적은 서로 동일하다.
+    *   $H_1$ (대립가설): 적어도 한 집단 이상의 평균 성적은 (나머지와) 다르다.
 
 ### 🐍 Python 코드
-파이썬의 `scipy.stats` 기초 모듈에는 웰치스 아노바가 내장되어 있지 않아요! 그래서 실무 및 시험에서는 주로 `pingouin` 라이브러리를 씁니다.
+Python의 기본 `scipy.stats` 모듈에는 웰치스 아노바(Welch's ANOVA)가 내장되어 있지 않으므로, 주로 `pingouin` 패키지를 활용합니다.
 ```{python}
+# 3집단 이분산 데이터 불러오기
+url_anova = "data/heteroscedasticity_anova_scores.csv"
+df_anova = pd.read_csv(url_anova)
+
+# Levene 검정으로 등분산성 확인
+g_A = df_anova[df_anova['group'] == 'A']['score']
+g_B = df_anova[df_anova['group'] == 'B']['score']
+g_C = df_anova[df_anova['group'] == 'C']['score']
+stat_lev_anova, p_lev_anova = stats.levene(g_A, g_B, g_C)
+print(f"[Levene 등분산 검정 - 3집단] p-value: {p_lev_anova:.4f}")
+
 # pingouin 패키지의 welch_anova 사용
-anova_result = pg.welch_anova(dv='score', between='group', data=df)
+anova_result = pg.welch_anova(dv='score', between='group', data=df_anova)
 print(anova_result)
 ```
 
 ### 📊 R 코드
-R은 기초 모듈군에 `oneway.test`라는 이름으로 탑재되어 있어 훨씬 직관적입니다.
+R의 경우 내장 함수인 `oneway.test`를 통해 손쉽게 구현할 수 있습니다.
 ```{r}
+url_anova <- "data/heteroscedasticity_anova_scores.csv"
+df_anova <- read.csv(url_anova)
+
+# Levene 검정으로 등분산성 확인
+library(car)
+leveneTest(score ~ group, data = df_anova)
+
 # 일반 ANOVA(aov) 대신 oneway.test 사용
-oneway.test(score ~ group, data = df, var.equal = FALSE)
+oneway.test(score ~ group, data = df_anova, var.equal = FALSE)
 ```
 
 ---
 
-### 📝 [모범 답안 작성법 (ADP 꿀팁)]
-등분산성이 깨진 것을 적극적으로 조치했다는 것을 체점자에게 뽐내야 합니다!
+### 📝 [결론 해석 모범 답안 작성법]
+등분산성이 기각되었을 때, 적절한 분석 방법으로 우회하여 통계적 타당성을 확보하였음을 명시해야 합니다.
 
-> "Levene의 등분산성 검정 결과 p-value가 0.05 미만으로 도출되어 등분산 가정이 기각되었다. 따라서 두 집단의 분산이 다르다고(이분산) 간주하며, 일반적인 분산분석/t검정 대신 이분산을 가정하는 **Welch's test(웰치스 검정)**를 수행하였다. 검정 결과 p-value가 0.05 이상이므로, 두 집단 간 평균에는 통계적으로 유의미한 차이가 없다고 판단한다."
-
+> "세 집단의 성적 데이터를 대상으로 Levene의 등분산성 검정을 실시한 결과 p-value가 0.05 미만으로 도출되어 등분산 가정이 기각되었다. 따라서 일반적인 일원분산분석 대신 **Welch's ANOVA**를 수행하였다. 검정 결과 p-value가 0.05 미만으로 나타나 귀무가설을 기각하므로, 적어도 한 집단 이상의 평균 성적은 다른 집단과 통계적으로 유의미한 차이가 있다고 판단한다."

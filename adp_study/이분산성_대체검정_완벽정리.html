@@ -2363,17 +2363,20 @@ window.Quarto = {
 </header>
 
 
-<section id="분산이-달라도-당황하지-마세요-이분산성-대처법" class="level1">
-<h1>분산이 달라도 당황하지 마세요! (이분산성 대처법)</h1>
-<p>앞선 포스팅에서 우리는 데이터를 분석하기 전에 <strong>‘정규성’</strong>과 <strong>‘등분산성’</strong>을 먼저 확인해야 한다고 배웠습니다. 그런데 만약 Levene 검정을 돌렸더니 <strong>p-value가 0.05보다 작게 나와서 등분산성 가정이 기각(이분산)</strong>되었다면 어떻게 해야 할까요?</p>
-<p>분석을 포기할 필요는 전혀 없습니다! 통계학에서는 분산이 다를 때를 대비하여 수식이 보정된 <strong>“Welch’s Method(웰치스 검정)”</strong>를 마련해 두었습니다. ADP 시험의 단골 문제이기도 한 이 상황을 코드로 어떻게 돌파하는지 살펴보겠습니다.</p>
+<section id="등분산성이-기각되었을-때의-대처법-이분산성-문제" class="level1">
+<h1>등분산성이 기각되었을 때의 대처법 (이분산성 문제)</h1>
+<p>데이터 분석 시 모수 검정을 적용하기 전 <strong>‘정규성’</strong>과 <strong>‘등분산성’</strong> 확인은 필수적입니다. 만약 Levene 검정 결과 <strong>p-value가 유의수준 0.05 미만으로 도출되어 등분산성 가정이 기각(이분산)</strong>되는 경우에는 일반적인 분산분석 등의 방법을 그대로 적용해서는 안 됩니다.</p>
+<p>이러한 집단 간 분산이 다를 경우를 대비하여, 수식이 보정된 <strong>“Welch’s Method(웰치스 검정)”</strong>을 사용하게 됩니다. 해당 상황은 ADP 실기 시험에 자주 출제되므로, 올바른 함수와 파라미터 적용 방법을 숙지해야 합니다.</p>
 <hr>
-<section id="등분산성이-깨진-데이터-살펴보기" class="level2">
-<h2 class="anchored" data-anchor-id="등분산성이-깨진-데이터-살펴보기">💥 등분산성이 깨진 데이터 살펴보기</h2>
-<p>의도적으로 두 집단의 분산 폭이 매우 다른 가상의 시험 성적 데이터를 준비했습니다. (동일한 수준의 점수대지만, A반은 학생들 성적이 오밀조밀하게 모여있고 B반은 널뛰기하는 상황입니다.)</p>
+<section id="등분산성이-기각되는-데이터-확인" class="level2">
+<h2 class="anchored" data-anchor-id="등분산성이-기각되는-데이터-확인">1. 등분산성이 기각되는 데이터 확인</h2>
+<p>집단 간 분산의 차이가 큰 가상의 시험 성적 데이터를 통해 상황을 재현합니다.</p>
 <ul>
-<li><strong><span class="math inline">\(H_0\)</span> (귀무가설):</strong> 집단 간 분산이 동일하다. (등분산이다)</li>
-<li><strong><span class="math inline">\(H_1\)</span> (대립가설):</strong> 집단 간 분산이 동일하지 않다. (이분산이다)</li>
+<li><strong>가설:</strong>
+<ul>
+<li><span class="math inline">\(H_0\)</span> (귀무가설): 집단 간 분산이 동일하다. (등분산이다)</li>
+<li><span class="math inline">\(H_1\)</span> (대립가설): 집단 간 분산이 동일하지 않다. (이분산이다)</li>
+</ul></li>
 </ul>
 <section id="python-문제가-발생한-상황-levene-검정-기각" class="level3">
 <h3 class="anchored" data-anchor-id="python-문제가-발생한-상황-levene-검정-기각">🐍 Python: 문제가 발생한 상황 (Levene 검정 기각)</h3>
@@ -2403,7 +2406,7 @@ Set the environment variable OUTDATED_IGNORE=1 to disable these warnings.
 </div>
 </div>
 <blockquote class="blockquote">
-<p>p-value가 0.05보다 훨씬 미만이므로 <strong>등분산성 가정이 기각(이분산)</strong>되었습니다. 기존처럼 일반적인 t-검정을 쓰면 치명적인 오류를 범하게 됩니다!</p>
+<p>p-value가 0.05 미만이므로 <strong>등분산성 가정이 기각(이분산)</strong>되었습니다. 이에 따라 분산이 동일하다는 가정을 바탕으로 하는 일반적인 모수 검정 대신 웰치스 검정을 수행해야 합니다.</p>
 </blockquote>
 <hr>
 </section>
@@ -2412,8 +2415,11 @@ Set the environment variable OUTDATED_IGNORE=1 to disable these warnings.
 <h2 class="anchored" data-anchor-id="대처법-1-독립표본-t-검정-to-welchs-t-test">🛠️ 대처법 1: 독립표본 t-검정 <span class="math inline">\(\to\)</span> Welch’s t-test</h2>
 <p>두 집단을 비교할 때는 <strong>일반 Student’s t-test</strong> 대신 수식이 변형된 <strong>Welch’s t-test</strong>를 사용해야 합니다.</p>
 <ul>
-<li><strong><span class="math inline">\(H_0\)</span> (귀무가설):</strong> A반과 B반의 평균 성적에는 차이가 없다.</li>
-<li><strong><span class="math inline">\(H_1\)</span> (대립가설):</strong> A반과 B반의 평균 성적에는 유의미한 차이가 있다.</li>
+<li><strong>가설:</strong>
+<ul>
+<li><span class="math inline">\(H_0\)</span> (귀무가설): A반과 B반의 평균 성적에는 차이가 없다.</li>
+<li><span class="math inline">\(H_1\)</span> (대립가설): A반과 B반의 평균 성적에는 유의미한 차이가 있다.</li>
+</ul></li>
 </ul>
 <section id="python-코드" class="level3">
 <h3 class="anchored" data-anchor-id="python-코드">🐍 Python 코드</h3>
@@ -2474,79 +2480,81 @@ mean in group A mean in group B
 </section>
 <section id="대처법-2-분산분석anova-to-welchs-anova" class="level2">
 <h2 class="anchored" data-anchor-id="대처법-2-분산분석anova-to-welchs-anova">🛠️ 대처법 2: 분산분석(ANOVA) <span class="math inline">\(\to\)</span> Welch’s ANOVA</h2>
-<p>만약 비교하려는 집단이 3개 이상(예: A, B, C반)일 때 등분산이 깨졌다면, 일반적인 <code>f_oneway</code> 모듈 대신 <strong>Welch’s ANOVA</strong>를 사용해야 합니다.</p>
+<p>만약 비교하려는 집단이 3개 이상일 때 등분산이 깨졌다면, 일반적인 ANOVA 대신 <strong>Welch’s ANOVA</strong>를 사용해야 합니다. 아래에서는 A, B, C 세 집단으로 구성된 별도 이분산 예시 데이터(<code>heteroscedasticity_anova_scores.csv</code>)를 사용합니다.</p>
 <ul>
-<li><strong><span class="math inline">\(H_0\)</span> (귀무가설):</strong> 모든 비교 집단의 평균 성적은 서로 동일하다.</li>
-<li><strong><span class="math inline">\(H_1\)</span> (대립가설):</strong> 적어도 한 집단 이상의 평균 성적은 (나머지와) 다르다.</li>
+<li><strong>가설:</strong>
+<ul>
+<li><span class="math inline">\(H_0\)</span> (귀무가설): 모든 비교 집단의 평균 성적은 서로 동일하다.</li>
+<li><span class="math inline">\(H_1\)</span> (대립가설): 적어도 한 집단 이상의 평균 성적은 (나머지와) 다르다.</li>
+</ul></li>
 </ul>
 <section id="python-코드-1" class="level3">
 <h3 class="anchored" data-anchor-id="python-코드-1">🐍 Python 코드</h3>
-<p>파이썬의 <code>scipy.stats</code> 기초 모듈에는 웰치스 아노바가 내장되어 있지 않아요! 그래서 실무 및 시험에서는 주로 <code>pingouin</code> 라이브러리를 씁니다.</p>
+<p>Python의 기본 <code>scipy.stats</code> 모듈에는 웰치스 아노바(Welch’s ANOVA)가 내장되어 있지 않으므로, 주로 <code>pingouin</code> 패키지를 활용합니다.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># pingouin 패키지의 welch_anova 사용</span></span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>anova_result <span class="op">=</span> pg.welch_anova(dv<span class="op">=</span><span class="st">&#39;score&#39;</span>, between<span class="op">=</span><span class="st">&#39;group&#39;</span>, data<span class="op">=</span>df)</span>
-<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(anova_result)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 3집단 이분산 데이터 불러오기</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>url_anova <span class="op">=</span> <span class="st">&quot;data/heteroscedasticity_anova_scores.csv&quot;</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>df_anova <span class="op">=</span> pd.read_csv(url_anova)</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Levene 검정으로 등분산성 확인</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>g_A <span class="op">=</span> df_anova[df_anova[<span class="st">&#39;group&#39;</span>] <span class="op">==</span> <span class="st">&#39;A&#39;</span>][<span class="st">&#39;score&#39;</span>]</span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>g_B <span class="op">=</span> df_anova[df_anova[<span class="st">&#39;group&#39;</span>] <span class="op">==</span> <span class="st">&#39;B&#39;</span>][<span class="st">&#39;score&#39;</span>]</span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>g_C <span class="op">=</span> df_anova[df_anova[<span class="st">&#39;group&#39;</span>] <span class="op">==</span> <span class="st">&#39;C&#39;</span>][<span class="st">&#39;score&#39;</span>]</span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>stat_lev_anova, p_lev_anova <span class="op">=</span> stats.levene(g_A, g_B, g_C)</span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f&quot;[Levene 등분산 검정 - 3집단] p-value: </span><span class="sc">{</span>p_lev_anova<span class="sc">:.4f}</span><span class="ss">&quot;</span>)</span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a><span class="co"># pingouin 패키지의 welch_anova 사용</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>  Source  ddof1      ddof2         F     p-unc       np2
-0  group      1  32.372361  0.180666  0.673614  0.003105</code></pre>
+<pre><code>[Levene 등분산 검정 - 3집단] p-value: 0.0000</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>anova_result <span class="op">=</span> pg.welch_anova(dv<span class="op">=</span><span class="st">&#39;score&#39;</span>, between<span class="op">=</span><span class="st">&#39;group&#39;</span>, data<span class="op">=</span>df_anova)</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(anova_result)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  Source  ddof1      ddof2          F     p-unc       np2
+0  group      2  15.335443  19.324632  0.000064  0.387937</code></pre>
 </div>
 </div>
 </section>
 <section id="r-코드-1" class="level3">
 <h3 class="anchored" data-anchor-id="r-코드-1">📊 R 코드</h3>
-<p>R은 기초 모듈군에 <code>oneway.test</code>라는 이름으로 탑재되어 있어 훨씬 직관적입니다.</p>
+<p>R의 경우 내장 함수인 <code>oneway.test</code>를 통해 손쉽게 구현할 수 있습니다.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 일반 ANOVA(aov) 대신 oneway.test 사용</span></span>
-<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="fu">oneway.test</span>(score <span class="sc">~</span> group, <span class="at">data =</span> df, <span class="at">var.equal =</span> <span class="cn">FALSE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>url_anova <span class="ot">&lt;-</span> <span class="st">&quot;data/heteroscedasticity_anova_scores.csv&quot;</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>df_anova <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(url_anova)</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Levene 검정으로 등분산성 확인</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(car)</span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a><span class="fu">leveneTest</span>(score <span class="sc">~</span> group, <span class="at">data =</span> df_anova)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning in leveneTest.default(y = y, group = group, ...): group coerced to
+factor.</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Levene&#39;s Test for Homogeneity of Variance (center = median)
+      Df F value    Pr(&gt;F)    
+group  2   27.37 9.834e-08 ***
+      33                      
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 일반 ANOVA(aov) 대신 oneway.test 사용</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="fu">oneway.test</span>(score <span class="sc">~</span> group, <span class="at">data =</span> df_anova, <span class="at">var.equal =</span> <span class="cn">FALSE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
     One-way analysis of means (not assuming equal variances)
 
 data:  score and group
-F = 0.18067, num df = 1.000, denom df = 32.372, p-value = 0.6736</code></pre>
+F = 19.325, num df = 2.000, denom df = 15.335, p-value = 6.442e-05</code></pre>
 </div>
 </div>
 <hr>
 </section>
-<section id="모범-답안-작성법-adp-꿀팁" class="level3">
-<h3 class="anchored" data-anchor-id="모범-답안-작성법-adp-꿀팁">📝 [모범 답안 작성법 (ADP 꿀팁)]</h3>
-<p>등분산성이 깨진 것을 적극적으로 조치했다는 것을 체점자에게 뽐내야 합니다!</p>
+<section id="결론-해석-모범-답안-작성법" class="level3">
+<h3 class="anchored" data-anchor-id="결론-해석-모범-답안-작성법">📝 [결론 해석 모범 답안 작성법]</h3>
+<p>등분산성이 기각되었을 때, 적절한 분석 방법으로 우회하여 통계적 타당성을 확보하였음을 명시해야 합니다.</p>
 <blockquote class="blockquote">
-<p>“Levene의 등분산성 검정 결과 p-value가 0.05 미만으로 도출되어 등분산 가정이 기각되었다. 따라서 두 집단의 분산이 다르다고(이분산) 간주하며, 일반적인 분산분석/t검정 대신 이분산을 가정하는 <strong>Welch’s test(웰치스 검정)</strong>를 수행하였다. 검정 결과 p-value가 0.05 이상이므로, 두 집단 간 평균에는 통계적으로 유의미한 차이가 없다고 판단한다.”</p>
+<p>“세 집단의 성적 데이터를 대상으로 Levene의 등분산성 검정을 실시한 결과 p-value가 0.05 미만으로 도출되어 등분산 가정이 기각되었다. 따라서 일반적인 일원분산분석 대신 <strong>Welch’s ANOVA</strong>를 수행하였다. 검정 결과 p-value가 0.05 미만으로 나타나 귀무가설을 기각하므로, 적어도 한 집단 이상의 평균 성적은 다른 집단과 통계적으로 유의미한 차이가 있다고 판단한다.”</p>
 </blockquote>
-<p>flowchart TD Start([데이터 수집: 연속형 종속변수]) –&gt; Q1{비교할 집단이<br>몇 개인가요?}</p>
-<pre><code>%% 1개 집단
-Q1 --&gt;|1개 집단 vs 특정 기준값| Q2_1{정규성을 만족하나요?&lt;br&gt;Shapiro-Wilk (p&gt;0.05)}
-Q2_1 -. &quot;Yes (통과)&quot; .-&gt; T1(단일 표본 t-검정&lt;br&gt;One-sample t-test)
-Q2_1 -. &quot;No (기각)&quot; .-&gt; NP1(윌콕슨 부호순위 검정&lt;br&gt;Wilcoxon Signed-Rank)
-
-%% 2개 집단 (대응 표본)
-Q1 --&gt;|동일 개체의 전/후 비교| Q2_2{차이값이 정규성을&lt;br&gt;만족하나요?}
-Q2_2 -. &quot;Yes (통과)&quot; .-&gt; T2(대응 표본 t-검정&lt;br&gt;Paired t-test)
-Q2_2 -. &quot;No (기각)&quot; .-&gt; NP2(윌콕슨 부호순위 검정&lt;br&gt;Wilcoxon Signed-Rank)
-
-%% 2개 집단 (독립 표본)
-Q1 --&gt;|서로 다른 2개의 집단 비교| Q2_3{정규성을 만족하나요?&lt;br&gt;Shapiro-Wilk}
-
-Q2_3 -. &quot;No (기각)&quot; .-&gt; NP3(맨-휘트니 U검정&lt;br&gt;Mann-Whitney U / Wilcoxon Rank-Sum)
-Q2_3 -. &quot;Yes (통과) ⬇️&quot; .-&gt; Q3_3{등분산성을 만족하나요?&lt;br&gt;Levene Test (p&gt;0.05)}
-
-Q3_3 -. &quot;Yes (통과)&quot; .-&gt; T3(독립 표본 t-검정&lt;br&gt;Student&#39;s t-test)
-Q3_3 -. &quot;No (기각)&quot; .-&gt; NP4(웰치스 t-검정&lt;br&gt;Welch&#39;s t-test)
-
-%% 결론
-T1 :::param --&gt; Result([p-value 확인 및&lt;br&gt;귀무가설 기각 여부 판단])
-T2 :::param --&gt; Result
-T3 :::param --&gt; Result
-NP4 :::param --&gt; Result
-
-NP1 :::nonparam --&gt; Result
-NP2 :::nonparam --&gt; Result
-NP3 :::nonparam --&gt; Result
-
-%% 색상 디자인 적용 (블로그용)
-classDef param fill:#d4edda,stroke:#28a745,stroke-width:2px,color:#155724;
-classDef nonparam fill:#f8d7da,stroke:#dc3545,stroke-width:2px,color:#721c24;</code></pre>
 </section>
 </section>
 </section>

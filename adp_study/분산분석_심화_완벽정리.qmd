@@ -1,0 +1,240 @@
+---
+title: "분산분석(ANOVA) 심화편: 비모수, 반복측정, 교호작용 시각화"
+format:
+  html:
+    theme: united      
+    toc: false         
+    embed-resources: true
+---
+
+```{r setup, include=FALSE}
+library(reticulate)
+use_condaenv("adp_env", required = TRUE)
+knitr::opts_chunk$set(
+    echo = TRUE,
+    collapse = FALSE,
+    comment = ""
+)
+```
+
+# 분산분석(ANOVA) 심화편: 극강의 조건에 대비하는 완벽 가이드
+
+ADP 실기 시험은 종종 수험생들을 당황하게 만들기 위한 심화 조건을 제시합니다. 정규성 가정이 산산조각 났거나, 동일한 피험자를 세 번 이상 반복해서 측정했거나, 통제할 수 없는 외부 변수가 존재하거나, 교호작용의 시각화를 요구하는 경우가 바로 그것입니다. 이 포스팅에서는 ADP 시험에서 당락을 좌우하는 분산분석의 핵심 심화 주제 네 가지를 완벽하게 정리합니다.
+
+## 🎯 [핵심] 분산분석 심화 유형 선택 가이드
+
+*   **크루스칼-왈리스 검정 (Kruskal-Wallis Test):** 3개 이상의 독립 집단을 비교해야 하는데 정규성이 기각되었을 때 수행하는 비모수 검정입니다. (One-way ANOVA의 대체)
+*   **반복측정 분산분석과 구형성 검정 (Repeated Measures ANOVA & Mauchly's Test):** 대응표본 T-검정의 확장판으로, 1개의 동일한 집단을 "3번 이상"의 시점에 걸쳐 추적 관찰했을 때 수행합니다. 이때 오차의 구형성(Sphericity) 가정을 충족하는지 반드시 확인해야 합니다.
+*   **공분산 분석 (ANCOVA):** 종속변수에 영향을 미치는 통제 불가능한 연속형 독립변수(Covariate)의 효과를 선형 모형으로 제거한 후 집단 간 처리 효과를 검정합니다.
+*   **교호작용 그래프 (Interaction Plot):** 이원배치 분석 후 두 범주형 요인 간의 얽힘(교호작용)을 선 그래프로 제출해야 할 때 수행합니다.
+
+---
+
+## 1. 정규성이 기각되었을 때: 비모수 분산분석 (Kruskal-Wallis)
+
+데이터가 심하게 한쪽으로 편달되어 있거나 표본의 수가 매우 적을 때 사용합니다. 평균 대신 데이터의 순위(Rank)를 활용하여 집단 간 차이를 검정합니다.
+
+*   **상황:** A, B, C 세 지점의 서비스 불만 건수 데이터를 수집하였습니다. 정규성 검정 결과 데이터의 정규성이 기각(p < 0.05)된 상태에서, 세 지점 간의 불만 건수 순위 집단에 차이가 있는지 검정하고자 합니다.
+*   **가설:**
+    *   $H_0$ (귀무가설): 세 지점의 불만 건수 중앙값(분포의 위치)은 모두 동일하다.
+    *   $H_1$ (대립가설): 적어도 한 지점의 불만 건수 중앙값은 차이가 있다.
+
+### 🐍 Python 코드
+```{python}
+import pandas as pd
+import scipy.stats as stats
+
+# 1. 시뮬레이션 데이터 불러오기 
+url1 = "https://raw.githubusercontent.com/MOON001208/ADP-data-set-and-analysis/main/adp_study/data/anova_kruskal.csv"
+df_kw = pd.read_csv(url1)
+
+# 범주 분리
+g_A = df_kw[df_kw['group'] == 'A']['value']
+g_B = df_kw[df_kw['group'] == 'B']['value']
+g_C = df_kw[df_kw['group'] == 'C']['value']
+
+# 2. Kruskal-Wallis 비모수 검정 수행
+stat, p_val = stats.kruskal(g_A, g_B, g_C)
+print(f"[Kruskal-Wallis 검정] p-value: {p_val:.4f}")
+
+# 3. 비모수 사후검정 (Dunn's Test) - KW 결과가 유의미할 경우(p < 0.05)
+import scikit_posthocs as sp
+dunn_result = sp.posthoc_dunn(df_kw, val_col='value', group_col='group', p_adjust='bonferroni')
+print(dunn_result)
+```
+
+### 📊 R 코드
+```{r}
+url1 <- "https://raw.githubusercontent.com/MOON001208/ADP-data-set-and-analysis/main/adp_study/data/anova_kruskal.csv"
+df_kw <- read.csv(url1)
+
+# 2. Kruskal-Wallis 비모수 검정 수행
+kruskal.test(value ~ group, data = df_kw)
+
+# 3. 비모수 사후검정 (Pairwise Wilcoxon Test with Bonferroni correction)
+pairwise.wilcox.test(df_kw$value, df_kw$group, p.adjust.method = "bonf")
+```
+
+### 📝 [결론 해석 모범 답안 작성법]
+
+> 세 집단의 데이터에 대한 탐색적 분석 결과 정규성 가정이 기각되어, 비모수 분산분석인 크루스칼-왈리스 검정(Kruskal-Wallis Test)을 수행하였다. 검정 결과 p-value가 유의수준 0.05 미만으로 도출되어 귀무가설을 기각한다. 
+> 이어서 어느 지점 간에 차이가 발생했는지 파악하기 위해 사후검정(Dunn's Test 또는 Bonferroni 보정)을 수행한 결과, 'A-C' 구간과 'B-C' 구간 간의 p-value는 유의수준 0.05 미만으로 유의미한 차이가 확인되었으나, 'A-B' 간에는 유의미한 차이가 없었다. 따라서 해당 서비스 지점에서는 C 지점의 불만 건수가 타 지점과 유의미하게 다름을 알 수 있다.
+
+---
+
+## 2. 동일 집단의 장기 추적: 반복측정 분산분석 (Repeated Measures ANOVA)
+
+동일한 피실험자들을 대상으로 시간의 경과(Pre, Mid, Post) 등에 따라 변화를 측정할 때 사용합니다. 각 관측치가 상호 독립적이지 않기 때문에 환자의 개별 특성(오차)을 보정하는 특별한 분산분석이 필요합니다.
+
+*   **상황:** 20명의 환자에게 신약을 투여한 후, 각 개인의 체중 변화를 투약 전(T1_Pre), 1개월 후(T2_Mid), 3개월 후(T3_Post) 총 3회에 걸쳐 측정하였습니다. 투약 기간에 따른 유의미한 체중 변화 시점이 있는지 분석하고자 합니다.
+*   **가설:**
+    *   $H_0$ (귀무가설): 세 가지 측정 시점(T1, T2, T3) 간의 평균 체중은 모두 동일하다.
+    *   $H_1$ (대립가설): 적어도 하나의 측정 시점의 평균 체중은 차이가 있다.
+
+### 🐍 Python 코드
+Python에서 반복측정을 수행할 때는 Scipy 기본 모듈 대신 `pingouin` 패키지가 가장 압도적으로 편리합니다.
+```{python}
+import pingouin as pg
+
+# 1. 데이터 불러오기
+url2 = "https://raw.githubusercontent.com/MOON001208/ADP-data-set-and-analysis/main/adp_study/data/anova_rm.csv"
+df_rm = pd.read_csv(url2)
+
+# 2. 구형성 검정 (Mauchly's Test) 명확하게 확인하기
+spher_test = pg.sphericity(data=df_rm, dv='score', within='time', subject='subject')
+print("[구형성 검정] (통과여부, p-value, chi2, dof, 엡실론):", spher_test)
+
+# 3. 반복측정 분산분석 수행
+# subject: 피험자 ID / within: 측정 시점
+rm_result = pg.rm_anova(dv='score', within='time', subject='subject', data=df_rm)
+print(rm_result)
+```
+
+### 📊 R 코드
+R에서는 추가 패키지 없이 **base R 내장 함수**만으로 구형성 검정과 반복측정 분산분석을 모두 수행할 수 있습니다.
+```{r}
+url2 <- "https://raw.githubusercontent.com/MOON001208/ADP-data-set-and-analysis/main/adp_study/data/anova_rm.csv"
+df_rm <- read.csv(url2)
+df_rm$subject <- as.factor(df_rm$subject)
+
+# 1. 구형성 검정 (Mauchly's Test) - Wide 포맷으로 변환 후 수행
+df_wide <- reshape(df_rm, idvar = "subject", timevar = "time", direction = "wide")
+score_matrix <- as.matrix(df_wide[, -1])
+mlm_model <- lm(score_matrix ~ 1)
+mauchly.test(mlm_model, X = ~1) # p > 0.05 이면 구형성 통과
+
+# 2. 반복측정 분산분석 수행
+rm_anova_model <- aov(score ~ time + Error(subject / time), data = df_rm)
+summary(rm_anova_model)
+```
+
+### 📝 [결론 해석 모범 답안 작성법]
+
+> 환자들의 측정 시기(time)를 개체 내 요인으로 지정하여 반복측정 분산분석을 수행한 결과, 시점 요인에 대한 F-통계량의 p-value가 유의수준 0.05 미만으로 도출되었다. 귀무가설을 기각하며, 투약 전, 중, 후의 측정 시점 사이에 평균 체중의 통계적으로 유의미한 변화가 발생하였음을 확인하였다.
+
+> 💡 **ADP 적중 체크포인트: 구형성 검정 (Mauchly's Test) 완벽 이해하기**
+> 
+> **1. 구형성(Sphericity)이란 무엇인가요?**
+> 쉽게 말해 **"모든 측정 시점들 간의 변화량(차이) 분산이 전부 다 고르게 비슷해야 한다"**는 뜻입니다.
+> 예를 들어 [1개월 차 - 투약 전] 체중 변화량들의 분산과, [3개월 차 - 1개월 차] 체중 변화량들의 분산이 서로 엇비슷해야만 시간의 변화에 따른 효과를 정확히 분리해 낼 수 있습니다. 독립표본 ANOVA에서 각 그룹의 분산이 같아야 한다는 **'등분산성' 가정의 반복측정 버전**이라고 이해하시면 완벽합니다.
+> 
+> **2. 검정 방법 (Mauchly's Test)**
+> *   $H_0$(귀무가설): 오차 분산이 동일하다 (구형성을 만족한다)
+> *   $H_1$(대립가설): 오차 분산이 동일하지 않다 (구형성이 깨졌다)
+> *   판단: p-value > 0.05 이면 통과입니다.
+> 
+> **3. 실제 코드에서의 해석 및 대처법 (★핵심★)**
+> 파이썬의 `pingouin.rm_anova`는 구형성 검정까지 백그라운드에서 한 방에 계산해서 표로 보여주는 아주 똑똑한 녀석입니다.
+> *   결과표의 **`sphericity`** 칼럼이 `True` (또는 p-spher > 0.05) 라면 $\rightarrow$ 구형성을 통과했으므로, 가장 일반적인 **`p-unc`**(Uncorrected p-value) 칼럼의 값을 보고 최종 결과(기각 여부)를 해석합니다.
+> *   결과표의 **`sphericity`** 칼럼이 `False` (기각) 라면 $\rightarrow$ 일반 p-value를 확인하면 1종 오류(가짜 유의성)가 엄청나게 커집니다! 따라서 페널티를 주어 깐깐하게 보정된 **`p-GG-corr`** (Greenhouse-Geisser correction) 칼럼의 값을 최종 p-value로 채택하여 보고해야 감점되지 않습니다. (R의 경우도 분석 결과 제일 밑에 항상 GG 에러 보정값이 출력되므로 이를 확인 및 기입하면 됩니다.)
+
+---
+
+## 3. 통제 불가능한 외부 변수의 통제: 공분산 분석 (ANCOVA)
+
+일반적인 분산분석(ANOVA) 모형에, 종속변수에 영향을 줄 수 있는 '초기 태도, 사전 실적 등 통제 불가능한 연속형 독립변수(Covariate)'를 추가하여 그 영향을 선형적으로 제거(보정)한 뒤 순수한 그룹 간 차이를 검정합니다.
+
+*   **상황:** 세 가지 다이어트 방법(Method A, B, C)의 체중 감량 효과(Weight_Loss)를 비교하려 합니다. 단, 참가자들의 사전 체형 지수(BMI)가 감량에 큰 영향을 미칠 수 있어, 이를 통제 변수(Covariate)로 설정하여 순수한 다이어트 방법의 효과를 검정하고자 합니다.
+*   **가설:**
+    *   $H_0$ (귀무가설): 사전 체형(BMI)을 통제했을 때, 다이어트 방법에 따른 감량 효과는 모두 동일하다.
+    *   $H_1$ (대립가설): 사전 체형(BMI)을 통제했을 때, 적어도 한 방법의 감량 효과는 유의미한 차이가 있다.
+
+### 🐍 Python 코드
+Scipy에는 기본 모듈이 없으므로 `pingouin` 패키지의 `ancova` 모듈을 사용하면 매우 직관적으로 작성할 수 있습니다.
+```{python}
+import pingouin as pg
+
+# 1. 시뮬레이션 데이터 불러오기
+url4 = "https://raw.githubusercontent.com/MOON001208/ADP-data-set-and-analysis/main/adp_study/data/anova_ancova.csv"
+df_ancova = pd.read_csv(url4)
+
+# 2. 공분산 분석(ANCOVA) 수행
+# dv: 종속변수 / between: 비교 집단(다이어트 방법) / covar: 통제할 연속형 변수(BMI)
+ancova_result = pg.ancova(dv='Weight_Loss', between='Method', covar='BMI', data=df_ancova)
+print(ancova_result)
+```
+
+### 📊 R 코드
+R에서는 `car` 패키지의 `Anova()` 함수를 사용하되, `type=3` (제3종 제곱합) 옵션을 주어야 정확한 공분산 분석이 수행됩니다.
+```{r}
+# install.packages('car') # 패키지가 없다면 콘솔에서 설치
+library(car)
+
+url4 <- "https://raw.githubusercontent.com/MOON001208/ADP-data-set-and-analysis/main/adp_study/data/anova_ancova.csv"
+df_ancova <- read.csv(url4)
+
+# 2. 공분산 분석(ANCOVA) 수행 (통제변수 BMI를 + 연산자로 모델에 먼저 포함시킵니다)
+ancova_model <- lm(Weight_Loss ~ BMI + Method, data = df_ancova)
+Anova(ancova_model, type = 3)
+```
+
+### 📝 [결론 해석 모범 답안 작성법]
+
+> 초기 체형(BMI)을 공변량(Covariate)으로 통제한 다이어트 방법에 대한 공분산 분석(ANCOVA) 결과는 다음과 같다.
+> 먼저, 공변량인 BMI 변수의 p-value가 유의수준 0.05 미만으로 도출되어(결과표 참고), 체중 감량에 유의미한 영향을 미치는 통제 변수로서의 의미를 가짐을 확인하였다.
+> 이후 BMI의 영향을 보정한 상태에서 다이어트 방법(Method)의 주효과를 확인한 결과, 마찬가지로 p-value가 0.05 미만으로 도출되어 귀무가설을 기각한다. 따라서 초기 체형이라는 강력한 외부 변수를 통제하더라도, 세 가지 다이어트 방법 간에는 통계적으로 유의미한 감량 효과의 차이가 확실히 존재함을 입증하였다.
+
+---
+
+## 4. [보너스] 이원배치 교호작용 시각화 (Interaction Plot)
+
+ADP 시험에서는 종종 "조건 간의 교호작용을 그래프로 나타내고 시각적으로 해석하시오"라는 문항이 출제됩니다. 시각화 시, **두 선이 평행하지 않고 교차(X자)하거나 간격이 급격히 좁아/구부러지는 양상**을 보인다면 "교호작용이 관찰된다"고 해석해야 합니다. 
+
+### 🐍 Python 코드
+이전 포스팅에서 사용했던 이원배치용 데이터를 기반으로 시각화합니다.
+```{python}
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+url3 = "https://raw.githubusercontent.com/MOON001208/ADP-data-set-and-analysis/main/adp_study/data/anova_twoway.csv"
+df_interaction = pd.read_csv(url3)
+
+plt.figure(figsize=(8, 5))
+# 통계적 교호작용 시각화에는 seaborn의 pointplot이 가장 널리 쓰입니다.
+sns.pointplot(data=df_interaction, x='Type', y='Drop', hue='Gender', dodge=True, markers=['o', 's'], linestyles=['-', '--'])
+plt.title("Interaction Plot: Type vs Gender")
+plt.show()
+```
+
+### 📊 R 코드
+```{r}
+url3 <- "https://raw.githubusercontent.com/MOON001208/ADP-data-set-and-analysis/main/adp_study/data/anova_twoway.csv"
+df_interaction <- read.csv(url3)
+
+with(df_interaction, {
+    interaction.plot(
+        x.factor = Type,
+        trace.factor = Gender,
+        response = Drop,
+        type = "b",
+        col = c("blue", "red"),
+        pch = c(19, 17),
+        main = "Interaction Plot"
+    )
+})
+```
+
+### 📝 [결론 해석 모범 답안 작성법]
+
+> 이원배치 분산분석 결과의 이해를 돕기 위해 교호작용 선 그래프(Interaction Plot)를 출력하였다. 단조로운 평행을 유지하지 않고, 특정한 약(Type Y) 집단에서 남성군(M)의 반응이 여성군(F)에 비해 급격히 솟구치며 선이 한 지점에서 교차하는 양상을 보인다. 이와 같은 비평행(Non-parallel) 시각적 탐색 결과를 미루어보아, 성별과 약물의 종류 간에는 뚜렷한 상호작용(교호작용)이 존재함을 명확히 해석할 수 있다.

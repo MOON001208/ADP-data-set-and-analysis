@@ -1,0 +1,176 @@
+---
+title: "제목: 3개 이상의 집단 차이 비교: 분산분석(ANOVA) 및 사후검정 완벽 가이드"
+format:
+  html:
+    theme: united      
+    toc: false         
+    embed-resources: true
+---
+
+```{r setup, include=FALSE}
+library(reticulate)
+use_condaenv("adp_env", required = TRUE)
+knitr::opts_chunk$set(
+    echo = TRUE,
+    collapse = FALSE,
+    comment = ""
+)
+```
+
+# 3개 이상 집단의 평균 비교: 분산분석(ANOVA) 완벽 가이드
+
+집단이 두 개일 때까지는 T-검정을 사용할 수 있지만, **3개 이상의 집단 간 평균 차이**를 비교해야 할 때는 분산분석(ANOVA)을 수행해야 합니다. ADP 실기 시험에서는 집단을 나누는 기준(독립변수)의 개수에 따라 **일원배치 분산분석(One-way)**과 **이원배치 분산분석(Two-way)**을 구분하여 적용해야 하며, 유의미한 차이가 발견될 경우 반드시 **사후검정(Post-hoc)**을 통해 어느 집단 간에 차이가 발생했는지 상세히 밝혀내야 합니다.
+
+## 🎯 [핵심] 분산분석 유형 선택 및 필수 검정 절차
+
+*   **일원배치 분산분석 (One-way ANOVA):** 독립변수가 1개일 때 (예: 3가지 교육 방법에 따른 성적 차이)
+*   **이원배치 분산분석 (Two-way ANOVA):** 독립변수가 2개일 때 (예: 약의 종류와 성별에 따른 효능 차이)
+*   **분석 필수 전제:** 모수적 분산분석은 각 집단 데이터의 **정규성**과 **등분산성**을 모두 만족해야 합니다. 등분산성이 기각될 경우 **Welch's ANOVA**를, 정규성이 기각될 경우 비모수 검정인 **Kruskal-Wallis 검정**을 수행해야 합니다.
+
+---
+
+## 0. 모델의 필수 전제: 정규성 및 등분산성 검정
+
+분산분석을 본 모형으로 수행하기 전, 분산분석 모델의 **잔차(Residuals)가 정규성을 만족**하는지, 비교할 **각 집단의 분산이 동일한지(등분산성)** 먼저 검토하는 것이 ADP 실기의 정석입니다.
+
+### 🐍 Python 사전 검정 코드
+```{python}
+import pandas as pd
+import scipy.stats as stats
+import statsmodels.api as sm
+from statsmodels.formula.api import ols
+
+url = "https://raw.githubusercontent.com/MOON001208/ADP-data-set-and-analysis/main/adp_study/data/anova_oneway.csv"
+df_one = pd.read_csv(url)
+
+# 1. 정규성 검정 (모델 잔차 활용)
+model = ols('score ~ C(method)', data=df_one).fit()
+stat_s, p_val_s = stats.shapiro(model.resid)
+print(f"[정규성] Shapiro-Wilk p-value: {p_val_s:.4f}") 
+
+# 2. 등분산성 검정 (Levene, Bartlett)
+# 범주별 데이터를 추출하여 다중 인자로 입력
+g_A = df_one[df_one['method'] == 'A']['score']
+g_B = df_one[df_one['method'] == 'B']['score']
+g_C = df_one[df_one['method'] == 'C']['score']
+
+stat_l, p_val_l = stats.levene(g_A, g_B, g_C)
+print(f"[등분산성] Levene Test p-value: {p_val_l:.4f}") 
+```
+
+### 📊 R 사전 검정 코드
+```{r}
+# install.packages("car")
+library(car)
+
+url <- "https://raw.githubusercontent.com/MOON001208/ADP-data-set-and-analysis/main/adp_study/data/anova_oneway.csv"
+df_one <- read.csv(url)
+
+anova_model <- aov(score ~ method, data = df_one)
+
+# 1. 정규성 검정 (잔차 활용)
+shapiro.test(residuals(anova_model))
+
+# 2. 등분산성 검정 (Levene Test, Bartlett Test 중 택일)
+leveneTest(score ~ method, data = df_one)
+bartlett.test(score ~ method, data = df_one)
+```
+
+> **🔥 [ADP 실전 대응 매뉴얼]**
+> *   두 검정 모두 p-value > 0.05 이면 가정을 통과하여 정상적인 아래의 ANOVA 단계를 밟습니다.
+> *   정규성 기각 시 (p < 0.05) $\rightarrow$ 비모수 검정인 **Kruskal-Wallis Test**로 우회 (심화편 참고)
+> *   등분산성 기각 시 (p < 0.05) $\rightarrow$ 분산이 달라도 쓸 수 있는 **Welch's ANOVA**로 우회 (이분산성편 참고)
+
+---
+
+## 1. 일원배치 분산분석 (One-way ANOVA)
+
+1개의 범주형 독립변수(수준이 3개 이상)가 연속형 종속변수에 미치는 영향을 검토합니다.
+
+*   **상황:** A, B, C 3가지 서로 다른 교육 방법이 학생들의 시험 성적에 미치는 영향이 동일한지 알아보고자 합니다. 사전에 정규성과 등분산성은 모두 만족하였다고 가정합니다.
+*   **가설:**
+    *   $H_0$ (귀무가설): 세 가지 교육 방법에 따른 평균 시험 성적은 모두 동일하다. ($\mu_A = \mu_B = \mu_C$)
+    *   $H_1$ (대립가설): 적어도 하나의 교육 방법에 따른 평균 시험 성적은 다른 결과와 차이가 있다.
+
+### 🐍 Python 코드
+```{python}
+import pandas as pd
+import scipy.stats as stats
+import statsmodels.api as sm
+from statsmodels.formula.api import ols
+from statsmodels.stats.multicomp import pairwise_tukeyhsd
+
+# 1. 시뮬레이션 데이터 불러오기
+url = "https://raw.githubusercontent.com/MOON001208/ADP-data-set-and-analysis/main/adp_study/data/anova_oneway.csv"
+df_one = pd.read_csv(url)
+
+# 2. 일원배치 분산분석 수행
+model = ols('score ~ C(method)', data=df_one).fit()
+anova_table = sm.stats.anova_lm(model, typ=2)
+print(anova_table)
+
+# 3. 사후검정 (Tukey HSD) - ANOVA 결과가 유의미할 경우(p < 0.05) 수행
+tukey = pairwise_tukeyhsd(endog=df_one['score'], groups=df_one['method'], alpha=0.05)
+print(tukey.summary())
+```
+
+### 📊 R 코드
+```{r}
+url <- "https://raw.githubusercontent.com/MOON001208/ADP-data-set-and-analysis/main/adp_study/data/anova_oneway.csv"
+df_one <- read.csv(url)
+
+# 2. 일원배치 분산분석 수행
+anova_model <- aov(score ~ method, data = df_one)
+summary(anova_model)
+
+# 3. 사후검정 (Tukey HSD)
+TukeyHSD(anova_model)
+```
+
+### 📝 [결론 해석 모범 답안 작성법]
+
+> 세 가지 교육 방법에 대한 일원배치 분산분석을 수행한 결과, 교육 방법 요인(method)에 대한 F-통계량의 p-value가 0.05 미만으로 도출되어 귀무가설을 기각한다. 즉, 교육 방법에 따라 평균 시험 성적에 통계적으로 유의미한 차이가 존재한다.
+> 이어서 어느 집단 간에 차이가 발생했는지 파악하기 위해 Tukey HSD 사후검정을 수행한 결과, 'A-B' 그룹 간의 p-value는 유의수준을 초과하여 유의미한 차이가 없었으나, 'C-A' 및 'C-B' 그룹의 비교에서는 p-value가 0.05 미만으로 유의미한 차이가 있음이 확인되었다. 결론적으로 C 교육 방법이 집단 간 성적 차이를 유발하는 주요 요인임을 알 수 있다.
+
+---
+
+## 2. 이원배치 분산분석 (Two-way ANOVA)
+
+2개의 범주형 독립변수가 종속변수에 미치는 주효과와, 두 독립변수가 결합하여 생기는 **교호작용(Interaction)** 효과를 동시에 검토합니다. (문제에서 상호작용 또는 교호작용을 묻는다면 무조건 이원배치를 의미합니다.)
+
+*   **상황:** 복용하는 '약의 종류(Type)'와 환자의 '성별(Gender)'이 '혈압 강하 수치(Drop)'에 영향을 미치는지, 그리고 두 요인 간의 교호작용이 존재하는지 확인하고자 합니다.
+*   **가설:** (이원배치는 반드시 3가지 가설을 동시에 세우고 검정해야 합니다)
+    *   **요인 1(종류) 가설:** $H_0$: 약의 종류에 따른 혈압 강하치의 차이는 없다. / $H_1$: 차이가 있다.
+    *   **요인 2(성별) 가설:** $H_0$: 성별에 따른 혈압 강하치의 차이는 없다. / $H_1$: 차이가 있다.
+    *   **교호작용 가설:** $H_0$: 약의 종류와 성별 간의 교호작용 효과는 없다. / $H_1$: 교호작용 효과가 존재한다.
+
+### 🐍 Python 코드
+```{python}
+# 1. 데이터 불러오기
+url2 = "https://raw.githubusercontent.com/MOON001208/ADP-data-set-and-analysis/main/adp_study/data/anova_twoway.csv"
+df_two = pd.read_csv(url2)
+
+# 2. 이원배치 분산분석 모델 피팅 (종류, 성별, 그리고 종류*성별 교호작용 명시)
+# C() 로 감싸 명목형 요인임을 지정합니다.
+model_two = ols('Drop ~ C(Type) + C(Gender) + C(Type):C(Gender)', data=df_two).fit()
+anova_table_two = sm.stats.anova_lm(model_two, typ=2)
+print(anova_table_two)
+```
+
+### 📊 R 코드
+```{r}
+url2 <- "https://raw.githubusercontent.com/MOON001208/ADP-data-set-and-analysis/main/adp_study/data/anova_twoway.csv"
+df_two <- read.csv(url2)
+
+# 2. 이원배치 분산분석 수행
+# (* 기호는 두 변수의 주효과와 교호작용 시너지까지 한 번에 계산함을 의미합니다.)
+anova_model_two <- aov(Drop ~ Type * Gender, data = df_two)
+summary(anova_model_two)
+```
+
+### 📝 [결론 해석 모범 답안 작성법]
+
+> 약의 종류(Type)와 성별(Gender)을 독립변수로 하여 이원배치 분산분석을 수행한 결과는 다음과 같다.
+> 첫째, 약물 종류에 대한 주효과 p-value는 0.05 미만으로 도출되어 혈압 강하 수치에 유의미한 차이를 보였다.
+> 둘째, 성별 요인의 주효과 역시 p-value가 0.05 미만으로 도출되어 혈압 강하 수치에 유의미한 영향을 미치는 것으로 확인되었다.
+> 셋째, 약물 종류와 성별 간 교호작용(Type:Gender)에 대한 p-value도 0.05 미만으로 도출되어 귀무가설을 기각한다. 따라서 약물 효과는 성별에 따라 달라지며, 특정 약물 조합에서 혈압 강하 효과가 더 크게 나타나는 교호작용이 통계적으로 유의하게 존재함을 알 수 있다.

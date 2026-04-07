@@ -284,7 +284,10 @@ eval_df <- data.frame(
   MAPE = c(mape(test, naive_pred), mape(test, ma_pred), mape(test, arima_pred))
 )
 
-round(eval_df, 3)
+eval_df$MAE <- round(eval_df$MAE, 3)
+eval_df$RMSE <- round(eval_df$RMSE, 3)
+eval_df$MAPE <- round(eval_df$MAPE, 3)
+eval_df
 ```
 
 ### 📝 [결론 해석 모범 답안 작성법]

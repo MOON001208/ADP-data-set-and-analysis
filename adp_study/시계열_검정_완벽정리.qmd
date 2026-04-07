@@ -111,6 +111,8 @@ df['date'] = pd.to_datetime(df['date'])
 df = df.sort_values('date')
 
 # 2. ADF 검정
+# statsmodels와 tseries는 lag 선택 방식, 회귀식 옵션, p-value 근사 방식이 달라
+# 같은 데이터라도 통계량과 p-value가 완전히 같지 않을 수 있습니다.
 adf_result = adfuller(df['value'])
 print(f"[ADF 통계량] {adf_result[0]:.4f}")
 print(f"[ADF 검정 p-value] {adf_result[1]:.4f}")
@@ -128,12 +130,14 @@ df$date <- as.Date(df$date)
 df <- df[order(df$date), ]
 
 # 2. ADF 검정
+# R의 tseries::adf.test()는 Python statsmodels와 구현 세부가 달라
+# 같은 데이터라도 통계량과 p-value가 조금 다르게 나올 수 있습니다.
 x <- ts(df$value, frequency = 7)
 adf.test(x)
 ```
 
 ### 📝 [결론 해석 모범 답안 작성법]
-> 원시 시계열에 대해 ADF 검정을 수행한 결과 p-value가 약 0.651로 유의수준 0.05보다 크게 도출되었다. 따라서 귀무가설을 기각하지 못하며, 이 시계열은 단위근이 존재하는 비정상 시계열로 판단할 수 있다.
+> 원시 시계열에 대해 ADF 검정을 수행한 결과, Python과 R에서 통계량과 p-value는 다소 다르게 산출될 수 있으나 두 구현 모두 p-value가 유의수준 0.05보다 크게 도출되었다. 따라서 귀무가설을 기각하지 못하며, 이 시계열은 단위근이 존재하는 비정상 시계열로 판단할 수 있다.
 
 ---
 

@@ -193,8 +193,9 @@ chisq.test(tbl, correct = FALSE)
 import pandas as pd
 import scipy.stats as stats
 
-# 1. data 폴더에서 데이터 불러오기
-df = pd.read_csv("data/chi_fisher_exact.csv")
+# 1. GitHub Raw URL에서 데이터 불러오기
+url = "https://raw.githubusercontent.com/MOON001208/ADP-data-set-and-analysis/main/adp_study/data/chi_fisher_exact.csv"
+df = pd.read_csv(url)
 
 # 교차표 생성
 cont_table = df.pivot(index='treatment', columns='outcome', values='count')
@@ -213,8 +214,9 @@ print(f"[오즈비] {odds_ratio:.4f}")
 
 ### 📊 R 코드
 ```{r}
-# 1. data 폴더에서 데이터 불러오기
-df <- read.csv("data/chi_fisher_exact.csv")
+# 1. GitHub Raw URL에서 데이터 불러오기
+url <- "https://raw.githubusercontent.com/MOON001208/ADP-data-set-and-analysis/main/adp_study/data/chi_fisher_exact.csv"
+df <- read.csv(url)
 
 # 교차표 생성
 tbl <- xtabs(count ~ treatment + outcome, data = df)

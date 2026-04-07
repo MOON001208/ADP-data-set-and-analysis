@@ -143,16 +143,20 @@ df$date <- as.Date(df$date)
 df <- df[order(df$date), ]
 
 # 2. 7일 이동평균 계산
-ma_7 <- stats::filter(df$sales, rep(1/7, 7), sides = 1)
+ma_7 <- stats::filter(df$sales, rep(1 / 7, 7), sides = 1)
 
 tail(data.frame(date = df$date, sales = df$sales, ma_7 = ma_7))
 
 # 3. 원시값과 이동평균 비교
-plot(df$date, df$sales, type = "l", col = "gray40", lwd = 1,
-     main = "Sales and 7-day Moving Average", xlab = "Date", ylab = "Sales")
+plot(df$date, df$sales,
+    type = "l", col = "gray40", lwd = 1,
+    main = "Sales and 7-day Moving Average", xlab = "Date", ylab = "Sales"
+)
 lines(df$date, ma_7, col = "blue", lwd = 2)
-legend("topleft", legend = c("Sales", "7-day Moving Average"),
-       col = c("gray40", "blue"), lty = 1, bty = "n")
+legend("topleft",
+    legend = c("Sales", "7-day Moving Average"),
+    col = c("gray40", "blue"), lty = 1, bty = "n"
+)
 ```
 
 ### 📝 [결론 해석 모범 답안 작성법]

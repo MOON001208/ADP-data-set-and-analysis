@@ -2522,10 +2522,12 @@ F_S = \max \left(0,\ 1 - \frac{\mathrm{Var}(R_t)}{\mathrm{Var}(S_t + R_t)} \righ
 <span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>Rt <span class="op">=</span> result.resid</span>
 <span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a><span class="co"># 4. 강도 계산</span></span>
-<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>F_t <span class="op">=</span> <span class="bu">max</span>(<span class="dv">0</span>, <span class="dv">1</span> <span class="op">-</span> np.var(Rt, ddof<span class="op">=</span><span class="dv">1</span>) <span class="op">/</span> np.var(Tt <span class="op">+</span> Rt, ddof<span class="op">=</span><span class="dv">1</span>))</span>
-<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>F_s <span class="op">=</span> <span class="bu">max</span>(<span class="dv">0</span>, <span class="dv">1</span> <span class="op">-</span> np.var(Rt, ddof<span class="op">=</span><span class="dv">1</span>) <span class="op">/</span> np.var(St <span class="op">+</span> Rt, ddof<span class="op">=</span><span class="dv">1</span>))</span>
-<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f&quot;[추세성 강도 F_t] </span><span class="sc">{</span>F_t<span class="sc">:.4f}</span><span class="ss">&quot;</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a><span class="co"># R의 var()는 표본분산 기준이므로, Python에서도 ddof=1을 맞춰주는 편이 결과 비교에 유리합니다.</span></span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a><span class="co"># STL 구현 차이와 잔차 처리 방식에 따라 R과 Python 값이 소수점 수준에서 약간 다를 수 있습니다.</span></span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>F_t <span class="op">=</span> <span class="bu">max</span>(<span class="dv">0</span>, <span class="dv">1</span> <span class="op">-</span> np.var(Rt, ddof<span class="op">=</span><span class="dv">1</span>) <span class="op">/</span> np.var(Tt <span class="op">+</span> Rt, ddof<span class="op">=</span><span class="dv">1</span>))</span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>F_s <span class="op">=</span> <span class="bu">max</span>(<span class="dv">0</span>, <span class="dv">1</span> <span class="op">-</span> np.var(Rt, ddof<span class="op">=</span><span class="dv">1</span>) <span class="op">/</span> np.var(St <span class="op">+</span> Rt, ddof<span class="op">=</span><span class="dv">1</span>))</span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f&quot;[추세성 강도 F_t] </span><span class="sc">{</span>F_t<span class="sc">:.4f}</span><span class="ss">&quot;</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[추세성 강도 F_t] 0.7972</code></pre>
 </div>
@@ -2555,10 +2557,12 @@ F_S = \max \left(0,\ 1 - \frac{\mathrm{Var}(R_t)}{\mathrm{Var}(S_t + R_t)} \righ
 <span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>Rt <span class="ot">&lt;-</span> comp<span class="sc">$</span>remainder</span>
 <span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a><span class="co"># 4. 강도 계산</span></span>
-<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>F_t <span class="ot">&lt;-</span> <span class="fu">max</span>(<span class="dv">0</span>, <span class="dv">1</span> <span class="sc">-</span> <span class="fu">var</span>(Rt, <span class="at">na.rm =</span> <span class="cn">TRUE</span>) <span class="sc">/</span> <span class="fu">var</span>(Tt <span class="sc">+</span> Rt, <span class="at">na.rm =</span> <span class="cn">TRUE</span>))</span>
-<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>F_s <span class="ot">&lt;-</span> <span class="fu">max</span>(<span class="dv">0</span>, <span class="dv">1</span> <span class="sc">-</span> <span class="fu">var</span>(Rt, <span class="at">na.rm =</span> <span class="cn">TRUE</span>) <span class="sc">/</span> <span class="fu">var</span>(St <span class="sc">+</span> Rt, <span class="at">na.rm =</span> <span class="cn">TRUE</span>))</span>
-<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>F_t</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a><span class="co"># R의 var()는 기본적으로 표본분산을 사용합니다.</span></span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a><span class="co"># 따라서 Python과 비교할 때는 ddof, STL 구현, NA 처리 방식에 따라 값이 소수점 수준에서 조금 달라질 수 있습니다.</span></span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>F_t <span class="ot">&lt;-</span> <span class="fu">max</span>(<span class="dv">0</span>, <span class="dv">1</span> <span class="sc">-</span> <span class="fu">var</span>(Rt, <span class="at">na.rm =</span> <span class="cn">TRUE</span>) <span class="sc">/</span> <span class="fu">var</span>(Tt <span class="sc">+</span> Rt, <span class="at">na.rm =</span> <span class="cn">TRUE</span>))</span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>F_s <span class="ot">&lt;-</span> <span class="fu">max</span>(<span class="dv">0</span>, <span class="dv">1</span> <span class="sc">-</span> <span class="fu">var</span>(Rt, <span class="at">na.rm =</span> <span class="cn">TRUE</span>) <span class="sc">/</span> <span class="fu">var</span>(St <span class="sc">+</span> Rt, <span class="at">na.rm =</span> <span class="cn">TRUE</span>))</span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a>F_t</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[1] 0.8028271</code></pre>
 </div>

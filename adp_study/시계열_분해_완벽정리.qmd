@@ -132,6 +132,8 @@ St = result.seasonal
 Rt = result.resid
 
 # 4. 강도 계산
+# R의 var()는 표본분산 기준이므로, Python에서도 ddof=1을 맞춰주는 편이 결과 비교에 유리합니다.
+# STL 구현 차이와 잔차 처리 방식에 따라 R과 Python 값이 소수점 수준에서 약간 다를 수 있습니다.
 F_t = max(0, 1 - np.var(Rt, ddof=1) / np.var(Tt + Rt, ddof=1))
 F_s = max(0, 1 - np.var(Rt, ddof=1) / np.var(St + Rt, ddof=1))
 
@@ -158,6 +160,8 @@ St <- comp$seasonal
 Rt <- comp$remainder
 
 # 4. 강도 계산
+# R의 var()는 기본적으로 표본분산을 사용합니다.
+# 따라서 Python과 비교할 때는 ddof, STL 구현, NA 처리 방식에 따라 값이 소수점 수준에서 조금 달라질 수 있습니다.
 F_t <- max(0, 1 - var(Rt, na.rm = TRUE) / var(Tt + Rt, na.rm = TRUE))
 F_s <- max(0, 1 - var(Rt, na.rm = TRUE) / var(St + Rt, na.rm = TRUE))
 

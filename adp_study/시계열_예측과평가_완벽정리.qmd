@@ -1,0 +1,306 @@
+---
+title: "제목: ADP 실기를 위한 시계열 예측과 평가 정리"
+format:
+  html:
+    theme: united      # 가독성 높은 테마
+    toc: false         # 네이버 블로그는 자체 목록을 쓰거나 필요 없을 때가 많음
+    embed-resources: true
+---
+
+```{r setup, include=FALSE}
+library(reticulate)
+use_condaenv("adp_env", required = TRUE)
+knitr::opts_chunk$set(
+    echo = TRUE, # 코드 표시
+    collapse = FALSE, # 네이버 블로그는 코드와 결과가 확실히 분리되는 게 보기 좋음
+    comment = "" # 결과창 앞의 ## 제거 (깔끔하게 보임)
+)
+```
+
+# 지문만 보고 1초 만에 파악하는 시계열 예측과 평가(Forecasting & Evaluation) 완벽 가이드
+
+**시계열 예측(Forecasting)**은 과거 시계열 데이터를 바탕으로 미래 값을 추정하는 과정입니다. ADP 실기 시험에서는 단순히 예측값만 구하는 것이 아니라, **train/test 분리**, **여러 모델 비교**, **오차 지표(MAE, RMSE, MAPE) 해석**까지 함께 요구되는 경우가 많습니다.
+
+## 🎯 [핵심] ADP 지문 키워드로 보는 시계열 예측과 평가 선택 가이드
+
+문제를 읽고 아래의 키워드에 따라 어떤 접근을 해야 하는지 판단하세요.
+
+| 확인 포인트 | 무엇을 해야 하나? | ADP 지문 단골 키워드 (이렇게 문제에 나옵니다!) |
+| :--- | :--- | :--- |
+| **예측 구간 설정** | train / test 분리 | "마지막 20%를 테스트셋으로 사용하시오." <br>"앞부분으로 학습하고 뒷부분을 예측하시오." |
+| **기준 모델 설정** | naive, moving average | "단순 예측 모형과 비교하시오." |
+| **본 모형 구축** | ARIMA 등 시계열 예측 모형 | "ARIMA 모형으로 예측하시오." |
+| **성능 평가** | MAE, RMSE, MAPE 비교 | "예측 성능을 평가하고 가장 적절한 모형을 선택하시오." |
+
+> 💡 **실전 Tip:** 
+> *   시계열은 무작위로 train/test를 나누지 않고 **시간 순서를 유지한 채 분리**해야 합니다.
+> *   모델이 복잡해도 **오차 지표가 낮아야** 좋은 모델입니다.
+> *   예측 문제에서는 숫자만 제시하지 말고, **어떤 모델이 왜 더 좋은지**까지 해석해야 합니다.
+
+시계열 예측 문제는 "모형 적합"보다도 **비교와 평가**가 중요합니다. 따라서 항상 **기준 모델 + 본 모델 + 성능 지표**를 같이 제시하는 습관을 가지면 ADP 답안이 훨씬 안정적입니다.
+
+---
+
+## 1. Train / Test 분리와 기본 예측 흐름
+
+시계열 데이터는 시간 순서를 보존한 채 앞부분을 학습(train), 뒷부분을 평가(test)로 나누어야 합니다.
+
+*   **상황:** 일별 매출 시계열 데이터를 이용하여 마지막 21일을 테스트셋으로 분리하고, 앞의 구간으로 예측 모형을 학습하시오.
+
+### 🐍 Python 코드
+```{python}
+import pandas as pd
+
+# 1. GitHub Raw URL에서 데이터 불러오기
+url = "https://raw.githubusercontent.com/MOON001208/ADP-data-set-and-analysis/main/adp_study/data/timeseries_forecast_sales.csv"
+df = pd.read_csv(url)
+df['date'] = pd.to_datetime(df['date'])
+df = df.sort_values('date')
+
+# 2. train / test 분리 (마지막 21일을 test)
+train = df.iloc[:-21].copy()
+test = df.iloc[-21:].copy()
+
+print(len(train), len(test))
+print(train.tail())
+print(test.head())
+```
+
+### 📊 R 코드
+```{r}
+# 1. GitHub Raw URL에서 데이터 불러오기
+url <- "https://raw.githubusercontent.com/MOON001208/ADP-data-set-and-analysis/main/adp_study/data/timeseries_forecast_sales.csv"
+df <- read.csv(url)
+df$date <- as.Date(df$date)
+df <- df[order(df$date), ]
+
+# 2. train / test 분리
+x <- ts(df$Sales, frequency = 7)
+train <- window(x, end = c(9, 7))
+test <- window(x, start = c(10, 1))
+
+length(train)
+length(test)
+```
+
+### 📝 [결론 해석 모범 답안 작성법]
+> 시계열 데이터의 시간 순서를 유지한 채 앞부분을 학습용(train), 마지막 21일을 평가용(test)으로 분리하였다. 이처럼 시계열 예측 문제에서는 일반적인 랜덤 분할이 아니라, 시간 흐름을 보존하는 방식으로 학습과 평가를 수행하는 것이 타당하다.
+
+---
+
+## 2. 기준 모델: Naive Forecast와 이동평균 예측
+
+예측 성능을 비교할 때는 복잡한 모델만 보는 것이 아니라, **가장 단순한 기준 모델**도 함께 제시하는 것이 좋습니다.
+
+*   **Naive Forecast:** 마지막 관측값을 그대로 미래에 반복
+*   **Moving Average Forecast:** 최근 일정 구간의 평균값을 미래에 반복
+
+### 🐍 Python 코드
+```{python}
+import pandas as pd
+import numpy as np
+
+# 1. 데이터 불러오기
+url = "https://raw.githubusercontent.com/MOON001208/ADP-data-set-and-analysis/main/adp_study/data/timeseries_forecast_sales.csv"
+df = pd.read_csv(url)
+df['date'] = pd.to_datetime(df['date'])
+df = df.sort_values('date')
+
+train = df.iloc[:-21].copy()
+test = df.iloc[-21:].copy()
+
+# 2. Naive Forecast
+naive_pred = np.repeat(train['Sales'].iloc[-1], len(test))
+
+# 3. 7일 이동평균 Forecast
+ma_pred = np.repeat(train['Sales'].tail(7).mean(), len(test))
+
+print(naive_pred[:5])
+print(ma_pred[:5])
+```
+
+### 📊 R 코드
+```{r}
+# 1. 데이터 불러오기
+url <- "https://raw.githubusercontent.com/MOON001208/ADP-data-set-and-analysis/main/adp_study/data/timeseries_forecast_sales.csv"
+df <- read.csv(url)
+df$date <- as.Date(df$date)
+df <- df[order(df$date), ]
+
+x <- ts(df$Sales, frequency = 7)
+train <- window(x, end = c(9, 7))
+test <- window(x, start = c(10, 1))
+
+# 2. Naive Forecast
+naive_pred <- rep(tail(train, 1), length(test))
+
+# 3. 7일 이동평균 Forecast
+ma_pred <- rep(mean(tail(train, 7)), length(test))
+
+head(naive_pred)
+head(ma_pred)
+```
+
+### 📝 [결론 해석 모범 답안 작성법]
+> 기준 모델로 Naive Forecast와 7일 이동평균 예측을 생성하였다. Naive 모델은 가장 최근 관측값을 그대로 반복하는 단순 기준선 역할을 하며, 이동평균 모델은 최근 구간의 평균 수준을 반영하여 단기적인 예측 기준선으로 활용할 수 있다.
+
+---
+
+## 3. ARIMA 모형으로 예측하기
+
+시계열의 자기상관 구조를 반영하는 대표적인 예측 모형이 **ARIMA**입니다. ADP 실기에서는 `auto.arima()`나 `ARIMA()`를 활용해 예측값을 구하는 문제가 자주 나옵니다.
+
+### 🐍 Python 코드
+```{python}
+import pandas as pd
+from statsmodels.tsa.statespace.sarimax import SARIMAX
+
+# 1. 데이터 불러오기
+url = "https://raw.githubusercontent.com/MOON001208/ADP-data-set-and-analysis/main/adp_study/data/timeseries_forecast_sales.csv"
+df = pd.read_csv(url)
+df['date'] = pd.to_datetime(df['date'])
+df = df.sort_values('date')
+
+train = df.iloc[:-21].copy()
+test = df.iloc[-21:].copy()
+
+# 2. ARIMA 적합 (예시: ARIMA(1,1,1) + 주기 7의 계절항)
+model = SARIMAX(train['Sales'], order=(1,1,1), seasonal_order=(1,0,0,7))
+result = model.fit(disp=False)
+
+# 3. 예측
+arima_pred = result.forecast(steps=len(test))
+print(arima_pred.head())
+```
+
+### 📊 R 코드
+```{r}
+# 1. 데이터 불러오기
+url <- "https://raw.githubusercontent.com/MOON001208/ADP-data-set-and-analysis/main/adp_study/data/timeseries_forecast_sales.csv"
+df <- read.csv(url)
+df$date <- as.Date(df$date)
+df <- df[order(df$date), ]
+
+x <- ts(df$Sales, frequency = 7)
+train <- window(x, end = c(9, 7))
+test <- window(x, start = c(10, 1))
+
+# 2. ARIMA 적합
+fit_arima <- arima(train, order = c(1,1,1),
+                   seasonal = list(order = c(1,0,0), period = 7))
+
+# 3. 예측
+arima_pred <- predict(fit_arima, n.ahead = length(test))$pred
+head(arima_pred)
+```
+
+### 📝 [결론 해석 모범 답안 작성법]
+> 학습 구간에 대해 ARIMA 모형을 적합한 뒤 테스트 구간 길이만큼 미래 값을 예측하였다. ARIMA는 단순 반복 예측보다 시계열의 차분 구조와 자기상관 패턴을 반영할 수 있으므로, 기준 모델 대비 더 정교한 예측이 가능하다.
+
+---
+
+## 4. MAE, RMSE, MAPE로 예측 성능 평가
+
+최종적으로는 예측값과 실제값을 비교하여 어떤 모델이 더 좋은지 판단해야 합니다. 대표적인 평가지표는 다음과 같습니다.
+
+*   **MAE (Mean Absolute Error):** 평균 절대오차
+*   **RMSE (Root Mean Squared Error):** 제곱오차에 더 민감한 오차 지표
+*   **MAPE (Mean Absolute Percentage Error):** 실제값 대비 상대 오차 비율
+
+### 🐍 Python 코드
+```{python}
+import pandas as pd
+import numpy as np
+from statsmodels.tsa.statespace.sarimax import SARIMAX
+
+# 1. 데이터 불러오기
+url = "https://raw.githubusercontent.com/MOON001208/ADP-data-set-and-analysis/main/adp_study/data/timeseries_forecast_sales.csv"
+df = pd.read_csv(url)
+df['date'] = pd.to_datetime(df['date'])
+df = df.sort_values('date')
+
+train = df.iloc[:-21].copy()
+test = df.iloc[-21:].copy()
+actual = test['Sales'].values
+
+# 2. 예측값 생성
+naive_pred = np.repeat(train['Sales'].iloc[-1], len(test))
+ma_pred = np.repeat(train['Sales'].tail(7).mean(), len(test))
+
+model = SARIMAX(train['Sales'], order=(1,1,1), seasonal_order=(1,0,0,7))
+result = model.fit(disp=False)
+arima_pred = result.forecast(steps=len(test)).values
+
+# 3. 평가 함수
+def mae(y, pred):
+    return np.mean(np.abs(y - pred))
+
+def rmse(y, pred):
+    return np.sqrt(np.mean((y - pred)**2))
+
+def mape(y, pred):
+    return np.mean(np.abs((y - pred) / y)) * 100
+
+# 4. 평가표
+eval_df = pd.DataFrame({
+    'Model': ['Naive', 'MovingAverage7', 'ARIMA'],
+    'MAE': [mae(actual, naive_pred), mae(actual, ma_pred), mae(actual, arima_pred)],
+    'RMSE': [rmse(actual, naive_pred), rmse(actual, ma_pred), rmse(actual, arima_pred)],
+    'MAPE': [mape(actual, naive_pred), mape(actual, ma_pred), mape(actual, arima_pred)]
+})
+
+print(eval_df.round(3))
+```
+
+### 📊 R 코드
+```{r}
+# 1. 데이터 불러오기
+url <- "https://raw.githubusercontent.com/MOON001208/ADP-data-set-and-analysis/main/adp_study/data/timeseries_forecast_sales.csv"
+df <- read.csv(url)
+df$date <- as.Date(df$date)
+df <- df[order(df$date), ]
+
+x <- ts(df$Sales, frequency = 7)
+train <- window(x, end = c(9, 7))
+test <- window(x, start = c(10, 1))
+
+# 2. 예측값 생성
+naive_pred <- rep(tail(train, 1), length(test))
+ma_pred <- rep(mean(tail(train, 7)), length(test))
+fit_arima <- arima(train, order = c(1,1,1),
+                   seasonal = list(order = c(1,0,0), period = 7))
+arima_pred <- predict(fit_arima, n.ahead = length(test))$pred
+
+# 3. 평가 함수
+mae <- function(a, p) mean(abs(a - p))
+rmse <- function(a, p) sqrt(mean((a - p)^2))
+mape <- function(a, p) mean(abs((a - p) / a)) * 100
+
+# 4. 평가표
+eval_df <- data.frame(
+  Model = c("Naive", "MovingAverage7", "ARIMA"),
+  MAE = c(mae(test, naive_pred), mae(test, ma_pred), mae(test, arima_pred)),
+  RMSE = c(rmse(test, naive_pred), rmse(test, ma_pred), rmse(test, arima_pred)),
+  MAPE = c(mape(test, naive_pred), mape(test, ma_pred), mape(test, arima_pred))
+)
+
+round(eval_df, 3)
+```
+
+### 📝 [결론 해석 모범 답안 작성법]
+> 예측 성능을 비교한 결과, ARIMA 모형의 MAE, RMSE, MAPE가 각각 가장 낮게 나타났다. 예를 들어 ARIMA의 MAE는 약 2.373, RMSE는 약 2.802, MAPE는 약 1.036으로 기준 모델인 Naive 및 이동평균보다 우수한 성능을 보였다. 따라서 본 데이터에서는 ARIMA 모형이 가장 적절한 예측 모델이라고 판단할 수 있다.
+
+---
+
+## ⛔ ADP 출제 위원회를 울리는 감점 방지 체크리스트
+
+1.  **"시계열 예측은 랜덤 분할이 아니라 시간순 분할입니다."**
+    *   train/test를 시간 순서대로 나누어야 미래 예측 상황을 제대로 재현할 수 있습니다.
+2.  **"복잡한 모델만 보여주지 말고 기준 모델도 같이 제시하세요."**
+    *   Naive나 이동평균 같은 단순 모델과 비교해야 ARIMA의 성능 우위를 더 설득력 있게 설명할 수 있습니다.
+3.  **"성능 지표는 여러 개를 같이 보는 것이 안전합니다."**
+    *   MAE, RMSE, MAPE를 함께 제시하면 오차 크기와 상대 오차를 동시에 설명할 수 있습니다.
+4.  **"가장 좋은 모델은 오차가 가장 낮은 모델입니다."**
+    *   예측 문제에서는 정확도 지표가 낮을수록 좋은 모델이라는 점을 명확히 적어야 합니다.
+5.  **"실제값과 예측값 비교 그래프를 추가하면 해석이 훨씬 쉬워집니다."**
+    *   숫자 표만 제시하는 것보다 시각화까지 함께 보여주면 답안 완성도가 올라갑니다.

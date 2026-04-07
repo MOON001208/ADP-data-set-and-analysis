@@ -54,8 +54,9 @@ knitr::opts_chunk$set(
 import pandas as pd
 import scipy.stats as stats
 
-# 1. data 폴더에서 데이터 불러오기
-df = pd.read_csv("data/correlation_pearson.csv")
+# 1. GitHub Raw URL에서 데이터 불러오기
+url = "https://raw.githubusercontent.com/MOON001208/ADP-data-set-and-analysis/main/adp_study/data/correlation_pearson.csv"
+df = pd.read_csv(url)
 
 # 2. 피어슨 상관분석
 cor_stat, p_val = stats.pearsonr(df['hours'], df['score'])
@@ -65,8 +66,9 @@ print(f"[피어슨 상관분석] p-value: {p_val:.4f}")
 
 ### 📊 R 코드
 ```{r}
-# 1. data 폴더에서 데이터 불러오기
-df <- read.csv("data/correlation_pearson.csv")
+# 1. GitHub Raw URL에서 데이터 불러오기
+url <- "https://raw.githubusercontent.com/MOON001208/ADP-data-set-and-analysis/main/adp_study/data/correlation_pearson.csv"
+df <- read.csv(url)
 
 # 2. 피어슨 상관분석
 cor.test(df$hours, df$score, method = "pearson")
@@ -91,8 +93,9 @@ cor.test(df$hours, df$score, method = "pearson")
 import pandas as pd
 import scipy.stats as stats
 
-# 1. data 폴더에서 데이터 불러오기
-df = pd.read_csv("data/correlation_spearman.csv")
+# 1. GitHub Raw URL에서 데이터 불러오기
+url = "https://raw.githubusercontent.com/MOON001208/ADP-data-set-and-analysis/main/adp_study/data/correlation_spearman.csv"
+df = pd.read_csv(url)
 
 # 2. 스피어만 순위상관분석
 rho, p_val = stats.spearmanr(df['immersion_rank'], df['presentation_rank'])
@@ -102,8 +105,9 @@ print(f"[스피어만 상관분석] p-value: {p_val:.4f}")
 
 ### 📊 R 코드
 ```{r}
-# 1. data 폴더에서 데이터 불러오기
-df <- read.csv("data/correlation_spearman.csv")
+# 1. GitHub Raw URL에서 데이터 불러오기
+url <- "https://raw.githubusercontent.com/MOON001208/ADP-data-set-and-analysis/main/adp_study/data/correlation_spearman.csv"
+df <- read.csv(url)
 
 # 2. 스피어만 순위상관분석
 cor.test(df$immersion_rank, df$presentation_rank, method = "spearman", exact = FALSE)
@@ -126,8 +130,9 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 
-# 1. data 폴더에서 데이터 불러오기
-df = pd.read_csv("data/correlation_matrix.csv")
+# 1. GitHub Raw URL에서 데이터 불러오기
+url = "https://raw.githubusercontent.com/MOON001208/ADP-data-set-and-analysis/main/adp_study/data/correlation_matrix.csv"
+df = pd.read_csv(url)
 
 # 2. 상관행렬 계산
 cor_mat = df.corr()
@@ -142,8 +147,9 @@ plt.show()
 
 ### 📊 R 코드
 ```{r}
-# 1. data 폴더에서 데이터 불러오기
-df <- read.csv("data/correlation_matrix.csv")
+# 1. GitHub Raw URL에서 데이터 불러오기
+url <- "https://raw.githubusercontent.com/MOON001208/ADP-data-set-and-analysis/main/adp_study/data/correlation_matrix.csv"
+df <- read.csv(url)
 
 # 2. 상관행렬 계산
 cor_mat <- cor(df)

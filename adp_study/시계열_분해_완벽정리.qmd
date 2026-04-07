@@ -1,0 +1,285 @@
+---
+title: "제목: ADP 실기를 위한 시계열 분해 정리"
+format:
+  html:
+    theme: united      # 가독성 높은 테마
+    toc: false         # 네이버 블로그는 자체 목록을 쓰거나 필요 없을 때가 많음
+    embed-resources: true
+---
+
+```{r setup, include=FALSE}
+library(reticulate)
+use_condaenv("adp_env", required = TRUE)
+knitr::opts_chunk$set(
+    echo = TRUE, # 코드 표시
+    collapse = FALSE, # 네이버 블로그는 코드와 결과가 확실히 분리되는 게 보기 좋음
+    comment = "" # 결과창 앞의 ## 제거 (깔끔하게 보임)
+)
+```
+
+# 지문만 보고 1초 만에 파악하는 시계열 분해(Time Series Decomposition) 완벽 가이드
+
+**시계열 분해(Time Series Decomposition)**는 시계열 데이터를 **추세(Trend)**, **계절성(Seasonality)**, **잔차(Remainder)**로 나누어 각 패턴의 의미를 해석하는 방법입니다. ADP 실기 시험에서는 특히 **주기(frequency)가 명시된 데이터**에 대해 STL 분해를 수행하고, 추세성/계절성 강도와 잔차 이상치를 함께 해석하는 유형이 매우 중요합니다.
+
+## 🎯 [핵심] ADP 지문 키워드로 보는 시계열 분해 선택 가이드
+
+문제를 읽고 아래의 키워드에 따라 어떤 분석을 해야 하는지 판단하세요.
+
+| 확인 포인트 | 무엇을 해야 하나? | ADP 지문 단골 키워드 (이렇게 문제에 나옵니다!) |
+| :--- | :--- | :--- |
+| **주기 명시** | `frequency` 반영 후 STL 분해 | "**주기를 7로 하는 시계열 데이터**", "**계절성을 고려하여 분해하시오**" |
+| **패턴 해석** | 추세 / 계절성 / 잔차 그래프 해석 | "분해 결과를 바탕으로 **추세, 계절성, 잔차를 설명하시오**" |
+| **강도 계산** | $F_T$, $F_S$ 계산 | "추세성 강도와 계절성 강도를 계산하시오." |
+| **잔차 이상치** | remainder 기준 IQR / z 탐지 | "잔차에서 이상치를 찾고 **event, holiday, flag**를 해석하시오." |
+
+> 💡 **실전 Tip:** 
+> *   주기 7 -> **일별 데이터 + 주간 계절성**
+> *   시계열 분해 문제는 대부분 **STL -> 성분 추출 -> 강도 계산 -> 잔차 이상치** 순서로 풀립니다.
+> *   이상치는 원본 `Sales`가 아니라 **remainder(잔차)** 기준으로 찾는 것이 핵심입니다.
+
+시계열 분해 문제는 예측 모델을 만드는 문제가 아니라, **패턴을 분리해서 설명하는 문제**입니다. 따라서 그래프만 보고 끝내지 말고, 성분을 직접 추출한 뒤 수치와 플래그까지 연결해서 해석하는 습관이 필요합니다.
+
+---
+
+## 1. STL 분해 후 추세, 계절성, 잔차 해석
+
+주기 7을 갖는 일별 매출 데이터를 STL 방식으로 분해하여 추세, 계절성, 잔차를 각각 해석합니다.
+
+*   **상황:** 이벤트(event), 휴일(holiday), 프로모션(promotion) 정보가 포함된 일별 매출 데이터가 주어졌다. 이 데이터는 주기 7을 갖는 시계열이라고 가정하고, Sales 열에 대해 STL 분해를 수행한 뒤 추세, 계절성, 잔차를 분석하시오.
+
+### 🐍 Python 코드
+```{python}
+import pandas as pd
+import matplotlib.pyplot as plt
+from statsmodels.tsa.seasonal import STL
+
+# 1. GitHub Raw URL에서 데이터 불러오기
+url = "https://raw.githubusercontent.com/MOON001208/ADP-data-set-and-analysis/main/adp_study/data/timeseries_decomposition_sales.csv"
+df = pd.read_csv(url)
+
+# 2. 날짜형 변환 및 정렬
+df['date'] = pd.to_datetime(df['date'])
+df = df.sort_values('date')
+
+# 3. STL 분해 (주기 7)
+stl = STL(df['Sales'], period=7, robust=True)
+result = stl.fit()
+
+# 4. 분해 결과 시각화
+fig = result.plot()
+fig.set_size_inches(10, 8)
+plt.tight_layout()
+plt.show()
+```
+
+### 📊 R 코드
+```{r}
+# 1. GitHub Raw URL에서 데이터 불러오기
+url <- "https://raw.githubusercontent.com/MOON001208/ADP-data-set-and-analysis/main/adp_study/data/timeseries_decomposition_sales.csv"
+df <- read.csv(url)
+
+# 2. 날짜형 변환 및 정렬
+df$date <- as.Date(df$date)
+df <- df[order(df$date), ]
+
+# 3. 시계열 객체 생성 및 STL 분해
+sales_ts <- ts(df$Sales, frequency = 7)
+fit <- stl(sales_ts, s.window = "periodic", robust = TRUE)
+
+# 4. 분해 결과 시각화
+plot(fit)
+```
+
+### 📝 [결론 해석 모범 답안 작성법]
+> STL 분해 결과, 추세 성분은 전반적으로 우상향하는 형태를 보여 매출이 시간의 흐름에 따라 점진적으로 증가하는 경향이 확인되었다. 계절성 성분은 주기 7을 기준으로 반복되는 패턴이 뚜렷하여 주간 계절성이 존재한다고 볼 수 있다. 잔차 성분은 대부분 일정 범위 내에서 움직이지만 일부 시점에서 큰 스파이크가 나타나므로, 이벤트나 프로모션 등의 외생 요인에 의한 이상치 가능성을 추가로 점검할 필요가 있다.
+
+---
+
+## 2. 추세성 강도($F_T$), 계절성 강도($F_S$) 계산
+
+시계열 분해 후에는 각 성분이 얼마나 강한지 수치로 측정할 수 있습니다. ADP 실기에서는 아래 공식을 그대로 제시하고 계산하도록 출제될 수 있습니다.
+
+$$
+F_T = \max \left(0,\ 1 - \frac{\mathrm{Var}(R_t)}{\mathrm{Var}(T_t + R_t)} \right)
+$$
+
+$$
+F_S = \max \left(0,\ 1 - \frac{\mathrm{Var}(R_t)}{\mathrm{Var}(S_t + R_t)} \right)
+$$
+
+*   **해석 포인트:**
+    *   $F_T$가 1에 가까울수록 추세성이 강하다.
+    *   $F_S$가 1에 가까울수록 계절성이 강하다.
+
+### 🐍 Python 코드
+```{python}
+import pandas as pd
+import numpy as np
+from statsmodels.tsa.seasonal import STL
+
+# 1. 데이터 불러오기
+url = "https://raw.githubusercontent.com/MOON001208/ADP-data-set-and-analysis/main/adp_study/data/timeseries_decomposition_sales.csv"
+df = pd.read_csv(url)
+df['date'] = pd.to_datetime(df['date'])
+df = df.sort_values('date')
+
+# 2. STL 분해
+result = STL(df['Sales'], period=7, robust=True).fit()
+
+# 3. 성분 추출
+Tt = result.trend
+St = result.seasonal
+Rt = result.resid
+
+# 4. 강도 계산
+F_t = max(0, 1 - np.var(Rt, ddof=1) / np.var(Tt + Rt, ddof=1))
+F_s = max(0, 1 - np.var(Rt, ddof=1) / np.var(St + Rt, ddof=1))
+
+print(f"[추세성 강도 F_t] {F_t:.4f}")
+print(f"[계절성 강도 F_s] {F_s:.4f}")
+```
+
+### 📊 R 코드
+```{r}
+# 1. 데이터 불러오기
+url <- "https://raw.githubusercontent.com/MOON001208/ADP-data-set-and-analysis/main/adp_study/data/timeseries_decomposition_sales.csv"
+df <- read.csv(url)
+df$date <- as.Date(df$date)
+df <- df[order(df$date), ]
+
+# 2. STL 분해
+sales_ts <- ts(df$Sales, frequency = 7)
+fit <- stl(sales_ts, s.window = "periodic", robust = TRUE)
+
+# 3. 성분 추출
+comp <- as.data.frame(fit$time.series)
+Tt <- comp$trend
+St <- comp$seasonal
+Rt <- comp$remainder
+
+# 4. 강도 계산
+F_t <- max(0, 1 - var(Rt, na.rm = TRUE) / var(Tt + Rt, na.rm = TRUE))
+F_s <- max(0, 1 - var(Rt, na.rm = TRUE) / var(St + Rt, na.rm = TRUE))
+
+F_t
+F_s
+```
+
+### 📝 [결론 해석 모범 답안 작성법]
+> 제시된 식에 따라 추세성 강도와 계절성 강도를 계산한 결과, $F_T$는 약 0.803, $F_S$는 약 0.717로 나타났다. 두 값 모두 1에 비교적 가까운 수준이므로 이 시계열은 추세성과 계절성이 모두 존재하며, 특히 추세성이 계절성보다 다소 더 강하게 나타난다고 해석할 수 있다.
+
+---
+
+## 3. Remainder에서 IQR 기준과 z 기준 공통 이상치 찾기
+
+시계열 분해 후 원본 매출이 아니라 **잔차(remainder)**를 기준으로 이상치를 찾습니다. 시험에서는 IQR 기준과 z-score 기준을 각각 적용한 뒤, 두 조건에 모두 해당하는 공통 이상치를 찾도록 출제될 수 있습니다.
+
+*   **상황:** STL 분해 후 remainder 성분에 대해 IQR 기준과 z-score 기준을 각각 적용하여 이상치를 탐지하고, 두 기준에서 동시에 탐지된 시점을 구하시오.
+
+### 🐍 Python 코드
+```{python}
+import pandas as pd
+from statsmodels.tsa.seasonal import STL
+
+# 1. 데이터 불러오기
+url = "https://raw.githubusercontent.com/MOON001208/ADP-data-set-and-analysis/main/adp_study/data/timeseries_decomposition_sales.csv"
+df = pd.read_csv(url)
+df['date'] = pd.to_datetime(df['date'])
+df = df.sort_values('date')
+
+# 2. STL 분해 후 remainder 추출
+result = STL(df['Sales'], period=7, robust=True).fit()
+df['remainder'] = result.resid
+
+# 3. IQR 기준 이상치
+q1 = df['remainder'].quantile(0.25)
+q3 = df['remainder'].quantile(0.75)
+iqr = q3 - q1
+lower = q1 - 1.5 * iqr
+upper = q3 + 1.5 * iqr
+df['iqr_outlier'] = ((df['remainder'] < lower) | (df['remainder'] > upper)).astype(int)
+
+# 4. z-score 기준 이상치
+z = (df['remainder'] - df['remainder'].mean()) / df['remainder'].std(ddof=1)
+df['z_outlier'] = (z.abs() > 3).astype(int)
+
+# 5. 공통 이상치
+df['both_outlier'] = ((df['iqr_outlier'] == 1) & (df['z_outlier'] == 1)).astype(int)
+print(df[df['both_outlier'] == 1][['date', 'Sales', 'remainder', 'event', 'holiday', 'promotion']])
+```
+
+### 📊 R 코드
+```{r}
+# 1. 데이터 불러오기
+url <- "https://raw.githubusercontent.com/MOON001208/ADP-data-set-and-analysis/main/adp_study/data/timeseries_decomposition_sales.csv"
+df <- read.csv(url)
+df$date <- as.Date(df$date)
+df <- df[order(df$date), ]
+
+# 2. STL 분해 후 remainder 추출
+sales_ts <- ts(df$Sales, frequency = 7)
+fit <- stl(sales_ts, s.window = "periodic", robust = TRUE)
+comp <- as.data.frame(fit$time.series)
+df$remainder <- comp$remainder
+
+# 3. IQR 기준 이상치
+q1 <- quantile(df$remainder, 0.25, na.rm = TRUE)
+q3 <- quantile(df$remainder, 0.75, na.rm = TRUE)
+iqr_val <- IQR(df$remainder, na.rm = TRUE)
+lower <- q1 - 1.5 * iqr_val
+upper <- q3 + 1.5 * iqr_val
+df$iqr_outlier <- ifelse(df$remainder < lower | df$remainder > upper, 1, 0)
+
+# 4. z-score 기준 이상치
+z <- (df$remainder - mean(df$remainder, na.rm = TRUE)) / sd(df$remainder, na.rm = TRUE)
+df$z_outlier <- ifelse(abs(z) > 3, 1, 0)
+
+# 5. 공통 이상치
+df$both_outlier <- ifelse(df$iqr_outlier == 1 & df$z_outlier == 1, 1, 0)
+subset(df, both_outlier == 1, select = c(date, Sales, remainder, event, holiday, promotion))
+```
+
+### 📝 [결론 해석 모범 답안 작성법]
+> remainder 성분에 대해 IQR 기준과 z-score 기준을 각각 적용한 결과, 두 기준에서 동시에 탐지된 공통 이상치는 2025-03-27과 2025-04-10으로 확인되었다. 즉 이 두 시점은 일반적인 추세와 계절성으로 설명되지 않는 비정상적인 변동이 매우 크게 발생한 구간이라고 해석할 수 있다.
+
+---
+
+## 4. 공통 이상치와 flag(event, holiday, promotion) 해석
+
+이상치가 발견되었다면, 원본 데이터의 flag 변수를 함께 확인하여 왜 이러한 이상치가 발생했는지 설명해야 합니다. 시험에서는 이 단계에서 **"이상치의 원인을 event, holiday 변수와 연결해서 서술하시오"**가 자주 출제됩니다.
+
+*   **상황:** 앞서 찾은 공통 이상치 시점에 대해 event, holiday, promotion 변수와 연결하여 이상치 발생 원인을 해석하시오.
+
+### 🐍 Python 코드
+```{python}
+# 공통 이상치만 확인
+outlier_df = df[df['both_outlier'] == 1][['date', 'Sales', 'event', 'holiday', 'promotion', 'remainder']]
+print(outlier_df)
+```
+
+### 📊 R 코드
+```{r}
+# 공통 이상치만 확인
+subset(df, both_outlier == 1, select = c(date, Sales, event, holiday, promotion, remainder))
+```
+
+### 📝 [결론 해석 모범 답안 작성법]
+> 공통 이상치로 탐지된 2025-03-27과 2025-04-10을 확인한 결과, 각각 `Launch`, `Festival` 이벤트가 존재하며 동시에 `promotion = Y`로 표시되어 있다. 따라서 해당 이상치는 단순한 우연한 변동이 아니라, 이벤트 및 프로모션과 같은 외생 요인에 의해 매출이 비정상적으로 증가한 결과로 해석하는 것이 타당하다. 반면 holiday 플래그가 있는 시점은 일부 상승 효과를 보였지만, 두 기준에서 동시에 탐지될 정도의 강한 이상치로 이어지지는 않았다.
+
+---
+
+## ⛔ ADP 출제 위원회를 울리는 감점 방지 체크리스트
+
+1.  **"stl() 함수 에러가 나면 대부분 ts 객체나 정렬 문제입니다."**
+    *   날짜형 변환, 정렬, `ts(..., frequency=7)` 설정을 먼저 확인하세요.
+    *   결측치가 있으면 STL 분해가 실패할 수 있으니 NA도 점검해야 합니다.
+2.  **"이상치는 원본 Sales가 아니라 remainder에서 찾습니다."**
+    *   추세와 계절성을 제거한 뒤 남는 잔차 기준으로 이상치를 잡아야 합니다.
+    *   이 부분을 놓치면 문제 의도를 벗어나기 쉽습니다.
+3.  **"$F_T$, $F_S$는 외우기보다 구조를 이해하세요."**
+    *   remainder 분산이 작고, trend 또는 seasonal과 합친 분산이 클수록 해당 강도는 커집니다.
+    *   즉 잔차보다 구조적 패턴이 강할수록 1에 가까워집니다.
+4.  **"IQR과 z-score를 둘 다 쓰라고 하면 교집합까지 확인해야 합니다."**
+    *   각각 따로 이상치를 찾는 것에서 끝내지 말고, 두 기준 모두 만족하는 행을 반드시 추출하세요.
+5.  **"마지막 해석은 flag 변수와 연결해야 점수가 납니다."**
+    *   event, holiday, promotion, campaign 같은 변수와 연결해 이상치 원인을 설명해야 실전형 답안이 됩니다.

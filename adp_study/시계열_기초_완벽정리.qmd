@@ -54,8 +54,9 @@ knitr::opts_chunk$set(
 import pandas as pd
 import matplotlib.pyplot as plt
 
-# 1. data 폴더에서 데이터 불러오기
-df = pd.read_csv("data/timeseries_basic_daily_sales.csv")
+# 1. GitHub Raw URL에서 데이터 불러오기
+url = "https://raw.githubusercontent.com/MOON001208/ADP-data-set-and-analysis/main/adp_study/data/timeseries_basic_daily_sales.csv"
+df = pd.read_csv(url)
 
 # 2. 날짜형 변환 및 정렬
 df['date'] = pd.to_datetime(df['date'])
@@ -76,8 +77,9 @@ plt.show()
 
 ### 📊 R 코드
 ```{r}
-# 1. data 폴더에서 데이터 불러오기
-df <- read.csv("data/timeseries_basic_daily_sales.csv")
+# 1. GitHub Raw URL에서 데이터 불러오기
+url <- "https://raw.githubusercontent.com/MOON001208/ADP-data-set-and-analysis/main/adp_study/data/timeseries_basic_daily_sales.csv"
+df <- read.csv(url)
 
 # 2. 날짜형 변환 및 정렬
 df$date <- as.Date(df$date)
@@ -108,8 +110,9 @@ plot(sales_ts, main = "Daily Sales Time Series", ylab = "Sales", xlab = "Time")
 import pandas as pd
 import matplotlib.pyplot as plt
 
-# 1. 데이터 불러오기
-df = pd.read_csv("data/timeseries_basic_daily_sales.csv")
+# 1. GitHub Raw URL에서 데이터 불러오기
+url = "https://raw.githubusercontent.com/MOON001208/ADP-data-set-and-analysis/main/adp_study/data/timeseries_basic_daily_sales.csv"
+df = pd.read_csv(url)
 df['date'] = pd.to_datetime(df['date'])
 df = df.sort_values('date')
 
@@ -133,8 +136,9 @@ plt.show()
 
 ### 📊 R 코드
 ```{r}
-# 1. 데이터 불러오기
-df <- read.csv("data/timeseries_basic_daily_sales.csv")
+# 1. GitHub Raw URL에서 데이터 불러오기
+url <- "https://raw.githubusercontent.com/MOON001208/ADP-data-set-and-analysis/main/adp_study/data/timeseries_basic_daily_sales.csv"
+df <- read.csv(url)
 df$date <- as.Date(df$date)
 df <- df[order(df$date), ]
 
@@ -166,8 +170,9 @@ legend("topleft", legend = c("Sales", "7-day Moving Average"),
 ```{python}
 import pandas as pd
 
-# 1. 데이터 불러오기
-df = pd.read_csv("data/timeseries_basic_daily_sales.csv")
+# 1. GitHub Raw URL에서 데이터 불러오기
+url = "https://raw.githubusercontent.com/MOON001208/ADP-data-set-and-analysis/main/adp_study/data/timeseries_basic_daily_sales.csv"
+df = pd.read_csv(url)
 df['date'] = pd.to_datetime(df['date'])
 df = df.sort_values('date')
 
@@ -182,8 +187,9 @@ print(weekday_mean)
 
 ### 📊 R 코드
 ```{r}
-# 1. 데이터 불러오기
-df <- read.csv("data/timeseries_basic_daily_sales.csv")
+# 1. GitHub Raw URL에서 데이터 불러오기
+url <- "https://raw.githubusercontent.com/MOON001208/ADP-data-set-and-analysis/main/adp_study/data/timeseries_basic_daily_sales.csv"
+df <- read.csv(url)
 df$date <- as.Date(df$date)
 df <- df[order(df$date), ]
 

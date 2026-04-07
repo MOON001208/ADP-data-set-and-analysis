@@ -1,0 +1,176 @@
+---
+title: "제목: ADP 실기를 위한 상관분석 정리"
+format:
+  html:
+    theme: united      # 가독성 높은 테마
+    toc: false         # 네이버 블로그는 자체 목록을 쓰거나 필요 없을 때가 많음
+    embed-resources: true
+---
+
+```{r setup, include=FALSE}
+library(reticulate)
+use_condaenv("adp_env", required = TRUE)
+knitr::opts_chunk$set(
+    echo = TRUE, # 코드 표시
+    collapse = FALSE, # 네이버 블로그는 코드와 결과가 확실히 분리되는 게 보기 좋음
+    comment = "" # 결과창 앞의 ## 제거 (깔끔하게 보임)
+)
+```
+
+# 지문만 보고 1초 만에 파악하는 상관분석(Correlation Analysis) 완벽 가이드
+
+**상관분석(Correlation Analysis)**은 두 변수 사이의 관계 방향과 강도를 수치로 요약하는 방법입니다. ADP 실기 시험에서는 지문에 등장하는 **'변수의 자료형'**과 **'분포/관계 형태'**에 따라 Pearson 상관분석, Spearman 순위상관분석, 상관행렬 해석 중 알맞은 접근을 선택해야 합니다.
+
+## 🎯 [핵심] ADP 지문 키워드로 보는 상관분석 선택 가이드
+
+문제를 읽고 아래의 키워드에 따라 알맞은 분석을 선택하세요.
+
+| 분석 종류 | 비교 대상 | ADP 지문 단골 키워드 (이렇게 문제에 나옵니다!) |
+| :--- | :--- | :--- |
+| **피어슨 상관분석** <br>(Pearson correlation) | **연속형 변수 2개** <br>선형 관계 | "**공부 시간**과 **시험 점수**의 상관관계를 분석하시오." <br>"광고비와 매출 간 선형 관계가 있는가?" |
+| **스피어만 순위상관분석** <br>(Spearman correlation) | **순위형 변수** 또는 <br>비정규/비선형 단조 관계 | "만족도 **순위**와 재구매 의향 순위가 관련 있는가?" <br>"이상치가 존재할 때 변수 간 순위 관계를 확인하시오." |
+| **상관행렬 / 시각화** <br>(Correlation matrix) | **여러 연속형 변수**의 <br>동시 관계 파악 | "변수 간 상관구조를 파악하고 다중공선성 가능성을 확인하시오." <br>"상관행렬과 heatmap을 제시하시오." |
+
+> 💡 **해석 Tip:** 
+> *   상관계수 부호 `+ / -` -> **관계 방향**
+> *   상관계수 절댓값 `0에 가까움 / 1에 가까움` -> **관계 강도**
+> *   상관관계가 있다고 해서 **인과관계**가 증명되는 것은 아닙니다.
+
+상관분석은 "차이가 있는가?"를 묻는 검정이 아니라 **"함께 움직이는 경향이 있는가?"**를 확인하는 분석입니다. 따라서 답안 작성 시에는 단순히 p-value만 쓰지 말고, **상관계수의 부호와 크기까지 함께 해석**해야 훨씬 완성도 있는 답안이 됩니다.
+
+---
+
+## 1. 피어슨 상관분석 (Pearson correlation)
+
+정규성 가정을 크게 해치지 않는 두 연속형 변수 사이의 **선형 관계**를 확인합니다.
+
+*   **상황:** 학생 20명의 하루 평균 공부 시간(hours)과 시험 점수(score)를 조사하였다. 공부 시간과 시험 점수 사이에 선형적인 상관관계가 있는지 분석하시오.
+*   **가설:**
+    *   $H_0$ (귀무가설): 공부 시간과 시험 점수 사이의 상관계수는 0이다. (선형 상관관계가 없다)
+    *   $H_1$ (대립가설): 공부 시간과 시험 점수 사이의 상관계수는 0이 아니다. (선형 상관관계가 있다)
+
+### 🐍 Python 코드
+```{python}
+import pandas as pd
+import scipy.stats as stats
+
+# 1. data 폴더에서 데이터 불러오기
+df = pd.read_csv("data/correlation_pearson.csv")
+
+# 2. 피어슨 상관분석
+cor_stat, p_val = stats.pearsonr(df['hours'], df['score'])
+print(f"[피어슨 상관계수] r: {cor_stat:.4f}")
+print(f"[피어슨 상관분석] p-value: {p_val:.4f}")
+```
+
+### 📊 R 코드
+```{r}
+# 1. data 폴더에서 데이터 불러오기
+df <- read.csv("data/correlation_pearson.csv")
+
+# 2. 피어슨 상관분석
+cor.test(df$hours, df$score, method = "pearson")
+```
+
+### 📝 [결론 해석 모범 답안 작성법]
+> 공부 시간과 시험 점수에 대해 피어슨 상관분석을 수행한 결과, 상관계수 r이 약 0.986으로 매우 강한 양(+)의 상관관계를 보였고 p-value 역시 유의수준 0.05 미만으로 도출되었다. 따라서 귀무가설을 기각하며, 공부 시간이 증가할수록 시험 점수도 함께 증가하는 선형 관계가 통계적으로 유의미하게 존재한다고 해석할 수 있다.
+
+---
+
+## 2. 스피어만 순위상관분석 (Spearman correlation)
+
+순위형 데이터이거나, 두 변수의 관계가 직선은 아니지만 **단조롭게 증가/감소**하는 경향이 있을 때 사용합니다.
+
+*   **상황:** 발표 참가자 15명의 과제 몰입도 순위와 발표 평가 순위를 조사하였다. 두 순위 사이에 관련성이 있는지 분석하시오.
+*   **가설:**
+    *   $H_0$ (귀무가설): 과제 몰입도 순위와 발표 평가 순위 사이의 상관계수는 0이다.
+    *   $H_1$ (대립가설): 과제 몰입도 순위와 발표 평가 순위 사이의 상관계수는 0이 아니다.
+
+### 🐍 Python 코드
+```{python}
+import pandas as pd
+import scipy.stats as stats
+
+# 1. data 폴더에서 데이터 불러오기
+df = pd.read_csv("data/correlation_spearman.csv")
+
+# 2. 스피어만 순위상관분석
+rho, p_val = stats.spearmanr(df['immersion_rank'], df['presentation_rank'])
+print(f"[스피어만 상관계수] rho: {rho:.4f}")
+print(f"[스피어만 상관분석] p-value: {p_val:.4f}")
+```
+
+### 📊 R 코드
+```{r}
+# 1. data 폴더에서 데이터 불러오기
+df <- read.csv("data/correlation_spearman.csv")
+
+# 2. 스피어만 순위상관분석
+cor.test(df$immersion_rank, df$presentation_rank, method = "spearman", exact = FALSE)
+```
+
+### 📝 [결론 해석 모범 답안 작성법]
+> 과제 몰입도 순위와 발표 평가 순위에 대해 스피어만 순위상관분석을 수행한 결과, 상관계수 rho가 약 0.986으로 매우 강한 양(+)의 순위 상관관계를 보였고 p-value 역시 유의수준 0.05 미만으로 도출되었다. 따라서 귀무가설을 기각하며, 몰입도 순위가 높을수록 발표 평가 순위도 함께 높아지는 경향이 통계적으로 유의미하게 존재한다고 해석할 수 있다.
+
+---
+
+## 3. 상관행렬과 시각화 (Correlation matrix & Heatmap)
+
+여러 연속형 변수 간의 관계를 한 번에 파악할 때는 상관행렬을 출력하는 것이 가장 효율적입니다. ADP 실기에서는 여기서 끝나지 않고, **어떤 변수 쌍이 강한 양/음의 상관을 보이는지**까지 말로 풀어주는 것이 중요합니다.
+
+*   **상황:** 학습 시간(study), 출석률(attendance), 스트레스(stress), 성적(score) 데이터를 수집하였다. 변수 간 상관구조를 파악하고 해석하시오.
+
+### 🐍 Python 코드
+```{python}
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+# 1. data 폴더에서 데이터 불러오기
+df = pd.read_csv("data/correlation_matrix.csv")
+
+# 2. 상관행렬 계산
+cor_mat = df.corr()
+print(cor_mat.round(3))
+
+# 3. Heatmap 시각화
+plt.figure(figsize=(7, 5))
+sns.heatmap(cor_mat, annot=True, cmap="RdBu_r", vmin=-1, vmax=1)
+plt.title("Correlation Heatmap")
+plt.show()
+```
+
+### 📊 R 코드
+```{r}
+# 1. data 폴더에서 데이터 불러오기
+df <- read.csv("data/correlation_matrix.csv")
+
+# 2. 상관행렬 계산
+cor_mat <- cor(df)
+round(cor_mat, 3)
+
+# 3. Heatmap 시각화
+heatmap(cor_mat, Rowv = NA, Colv = NA, scale = "none")
+```
+
+### 📝 [결론 해석 모범 답안 작성법]
+> 상관행렬을 확인한 결과, 학습 시간(study)과 성적(score)은 매우 강한 양(+)의 상관관계를 보였으며, 출석률(attendance) 역시 성적과 양의 상관을 나타냈다. 반면 스트레스(stress)는 성적과 강한 음(-)의 상관관계를 보여, 스트레스가 높을수록 성적은 낮아지는 경향이 관찰되었다. 또한 학습 시간과 출석률 간에도 높은 양의 상관이 확인되므로, 회귀모형을 구축할 경우 다중공선성 여부를 추가로 점검할 필요가 있다.
+
+---
+
+## ⛔ ADP 출제 위원회를 울리는 감점 방지 체크리스트
+
+1.  **"상관분석인데 p-value만 쓰고 끝내면 안 됩니다."**
+    *   상관분석의 핵심은 **상관계수 값 자체**입니다.
+    *   반드시 **방향(양/음)** 과 **강도(약/중/강)** 를 함께 써야 합니다.
+2.  **"Pearson이냐 Spearman이냐 구분을 해야 합니다."**
+    *   연속형 + 선형 관계 -> **Pearson**
+    *   순위형 / 비정규 / 단조 관계 -> **Spearman**
+3.  **"상관관계와 인과관계를 혼동하지 마세요."**
+    *   상관관계가 높아도 한 변수가 다른 변수를 직접 유발한다고 단정할 수는 없습니다.
+    *   답안에서는 **관련성** 이나 **동반 변화 경향** 정도로 표현하는 것이 안전합니다.
+4.  **"상관행렬에서 높은 상관은 회귀분석의 다중공선성 신호일 수 있습니다."**
+    *   특히 독립변수끼리 상관이 지나치게 높으면, 이후 회귀분석 단계에서 VIF 등을 추가로 확인해야 합니다.
+5.  **"산점도나 heatmap까지 보여주면 해석이 훨씬 쉬워집니다."**
+    *   숫자만 제시하는 것보다, 관계 방향과 강도를 시각적으로 함께 제시하면 답안 완성도가 높아집니다.
+
